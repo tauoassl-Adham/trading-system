@@ -1,5 +1,9 @@
-print("LOADED:", __name__)
-print("MARKET STATE FILE LOADED")
+import logging
+
+logger = logging.getLogger(__name__)
+
+logger.info("LOADED: %s", __name__)
+logger.info("MARKET STATE FILE LOADED")
 
 
 class MarketState:
@@ -11,4 +15,4 @@ class MarketState:
 
     def on_tick(self, data):
         self.last_price = data["price"]
-        print("MARKET STATE UPDATED:", self.last_price)
+        logger.info("MARKET STATE UPDATED: %s", self.last_price)
