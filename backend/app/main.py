@@ -1,15 +1,21 @@
-print("LOADED:", __name__)
 from fastapi import FastAPI
 import asyncio
 
 from app.core.event_bus import EventBus
-from app.market.market_state import MarketState
+from app.data.data_store import MarketDataStore
+from app.market.market_snapshot import MarketSnapshot
 from app.data.websocket_client import stream
 
 app = FastAPI()
 
+# 🔥 النظام المركزي
 event_bus = EventBus()
-market_state = MarketState(event_bus)
+
+# 🧠 Data Store (هذا هو القلب الآن)
+data_store = MarketDataStore(event_bus)
+
+# 📸 Snapshot layer
+snapshot = MarketSnapshot(data_store)
 
 
 @app.on_event("startup")

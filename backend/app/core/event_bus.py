@@ -1,5 +1,5 @@
 class EventBus:
-    def _init_(self):
+    def __init__(self):
         self.subscribers = {}
 
     def subscribe(self, event_type, callback):
