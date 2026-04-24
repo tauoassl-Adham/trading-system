@@ -1,4 +1,7 @@
 from collections import defaultdict, deque
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class MarketDataStore:
@@ -39,6 +42,13 @@ class MarketDataStore:
         bucket = int(ts // interval) * interval
 
         if bucket not in self.current[tf]:
+            # إغلاق الشمعة السابقة إذا وجدت
+            if self.current[tf]:
+                prev_bucket = max(self.current[tf].keys())
+                closed_candle = self.current[tf][prev_bucket]
+                self.event_bus.publish(f"candle_closed_{tf}", closed_candle)
+
+            # بدء شمعة جديدة
             candle = {
                 "open": price,
                 "high": price,
