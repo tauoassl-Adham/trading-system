@@ -95,6 +95,76 @@ def get_analytics():
     return analytics_engine.generate_performance_report()
 
 
-@app.get("/analytics/suggestions")
-def get_suggestions():
-    return {"suggestions": analytics_engine.get_strategy_suggestions()}
+@app.post("/manual-trade")
+def manual_trade(trade: dict):
+    """
+    إدخال صفقة يدوية للمراقبة
+    trade = {
+        "symbol": "BTCUSDT",
+        "direction": "BUY" or "SELL",
+        "quantity": 0.001,
+        "entry_price": 77500.0,
+        "stop_loss": 77000.0,
+        "take_profit": 78000.0
+    }
+    """
+    try:
+        # التحقق من المخاطر
+        risk_check = risk_manager.validate_manual_trade(trade)
+        if not risk_check["approved"]:
+            return {"error": risk_check["reason"]}
+
+        # إدخال الصفقة
+        side = "long" if trade["direction"] == "BUY" else "short"
+        portfolio_manager.update_position(
+            trade["symbol"],
+            side,
+            trade["quantity"] if trade["direction"] == "BUY" else -trade["quantity"],
+            trade["entry_price"]
+        )
+
+        return {"success": True, "message": "تم إدخال الصفقة بنجاح"}
+
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.delete("/position/{symbol}")
+def close_position_manual(symbol: str, exit_price: float):
+    """إغلاق مركز يدوياً"""
+    try:
+        # البحث عن المركز
+        positions = portfolio_manager.get_positions()
+        position = next((p for p in positions if p["symbol"] == symbol), None)
+
+        if not position:
+            return {"error": "المركز غير موجود"}
+
+        # إغلاق المركز
+        side = "long" if position["side"] == "long" else "short"
+        quantity = -position["quantity"] if side == "long" else position["quantity"]
+
+        portfolio_manager.update_position(symbol, side, quantity, exit_price)
+
+        return {"success": True, "message": f"تم إغلاق مركز {symbol}"}
+
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/symbols")
+def get_available_symbols():
+    """الحصول على قائمة العملات المتاحة"""
+    # قائمة العملات الرئيسية في Binance
+    symbols = [
+        "BTCUSDT", "ETHUSDT", "BNBUSDT", "ADAUSDT", "SOLUSDT",
+        "DOTUSDT", "DOGEUSDT", "AVAXUSDT", "LTCUSDT", "TRXUSDT"
+    ]
+    return {"symbols": symbols}
+
+
+@app.get("/timeframes")
+def get_available_timeframes():
+    """الحصول على الـ timeframes المتاحة"""
+    timeframes = ["1m", "5m", "15m", "1h", "4h", "1d"]
+    return {"timeframes": timeframes}

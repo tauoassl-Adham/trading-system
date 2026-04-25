@@ -141,6 +141,97 @@ class Dashboard {
         }
     }
 
+    // Manual Trading Functions
+    async submitManualTrade(event) {
+        event.preventDefault();
+
+        const formData = new FormData(event.target);
+        const trade = {
+            symbol: formData.get('symbol'),
+            direction: formData.get('direction'),
+            quantity: parseFloat(formData.get('quantity')),
+            entry_price: parseFloat(formData.get('entry-price')),
+            stop_loss: parseFloat(formData.get('stop-loss')),
+            take_profit: formData.get('take-profit') ? parseFloat(formData.get('take-profit')) : null
+        };
+
+        const submitBtn = event.target.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري الإدخال...';
+
+        try {
+            const response = await fetch(`${this.apiBase}/manual-trade`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(trade)
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                this.showTradeResult('تم إدخال الصفقة بنجاح! ✅', 'success');
+                event.target.reset();
+                // تحديث البيانات فوراً
+                setTimeout(() => this.updateAll(), 1000);
+            } else {
+                this.showTradeResult(result.error || 'حدث خطأ في إدخال الصفقة', 'error');
+            }
+
+        } catch (error) {
+            console.error('Manual trade submission failed:', error);
+            this.showTradeResult('فشل في الاتصال بالخادم', 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+        }
+    }
+
+    showTradeResult(message, type) {
+        const resultDiv = document.getElementById('trade-result');
+        resultDiv.textContent = message;
+        resultDiv.className = `trade-result ${type}`;
+
+        // إخفاء الرسالة بعد 5 ثواني
+        setTimeout(() => {
+            resultDiv.textContent = '';
+            resultDiv.className = 'trade-result';
+        }, 5000);
+    }
+
+    // Close Position Function
+    async closePosition(symbol) {
+        if (!confirm(`هل أنت متأكد من إغلاق مركز ${symbol}؟`)) {
+            return;
+        }
+
+        try {
+            // الحصول على السعر الحالي (يمكن تحسين هذا)
+            const snapshotResponse = await fetch(`${this.apiBase}/snapshot`);
+            const snapshot = await snapshotResponse.json();
+            const exitPrice = snapshot.price;
+
+            const response = await fetch(`${this.apiBase}/position/${symbol}?exit_price=${exitPrice}`, {
+                method: 'DELETE'
+            });
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                alert('تم إغلاق المركز بنجاح!');
+                this.updateAll();
+            } else {
+                alert(result.error || 'فشل في إغلاق المركز');
+            }
+
+        } catch (error) {
+            console.error('Close position failed:', error);
+            alert('فشل في الاتصال بالخادم');
+        }
+    }
+
     async updateAnalytics() {
         try {
             const response = await fetch(`${this.apiBase}/analytics`);
@@ -230,10 +321,18 @@ class Dashboard {
         } catch (error) {
             console.error('Suggestions update failed:', error);
         }
+    // Initialize dashboard
+    init() {
+        this.updateAll();
+        setInterval(() => this.updateAll(), 5000); // تحديث كل 5 ثواني
+
+        // إضافة event listeners
+        document.getElementById('manual-trade-form').addEventListener('submit', (e) => this.submitManualTrade(e));
     }
 }
 
 // Initialize dashboard when page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new Dashboard();
+    const dashboard = new Dashboard();
+    dashboard.init();
 });

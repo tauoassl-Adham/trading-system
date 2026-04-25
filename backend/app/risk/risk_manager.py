@@ -170,3 +170,42 @@ class RiskManager:
             "active_positions": len(self.active_positions),
             "total_exposure": sum(self.calculate_exposure(sym) for sym in self.active_positions)
         }
+
+    def validate_manual_trade(self, trade: Dict[str, Any]) -> Dict[str, Any]:
+        """التحقق من صفقة يدوية"""
+        symbol = trade["symbol"]
+        quantity = trade["quantity"]
+        entry_price = trade["entry_price"]
+        stop_loss = trade.get("stop_loss")
+
+        # 1. التحقق من حدود الخسارة اليومية
+        if self.daily_loss >= self.max_daily_loss * self.daily_start_capital:
+            return {"approved": False, "reason": "تم الوصول لحد الخسارة اليومية"}
+
+        # 2. التحقق من عدم وجود مركز نشط لنفس الأصل
+        if symbol in self.active_positions:
+            return {"approved": False, "reason": "يوجد مركز نشط لهذا الأصل"}
+
+        # 3. التحقق من stop loss
+        if not stop_loss:
+            return {"approved": False, "reason": "يجب تحديد stop loss"}
+
+        # 4. حساب المخاطر
+        risk_per_unit = abs(entry_price - stop_loss)
+        if risk_per_unit == 0:
+            return {"approved": False, "reason": "stop loss غير صحيح"}
+
+        risk_amount = quantity * risk_per_unit
+
+        # 5. التحقق من حدود المخاطر لكل صفقة
+        max_risk = self.max_risk_per_trade * self.current_capital
+        if risk_amount > max_risk:
+            return {"approved": False, "reason": f"المخاطر عالية جداً (الحد الأقصى: ${max_risk:.2f})"}
+
+        # 6. التحقق من التعرض الأقصى
+        position_value = quantity * entry_price
+        max_exposure = self.max_exposure_per_asset * self.current_capital
+        if position_value > max_exposure:
+            return {"approved": False, "reason": f"التعرض عالي جداً (الحد الأقصى: ${max_exposure:.2f})"}
+
+        return {"approved": True, "risk_amount": risk_amount, "position_value": position_value}
