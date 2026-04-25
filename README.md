@@ -40,14 +40,23 @@ uvicorn app.main:app --reload
 python -m unittest backend/tests/
 ```
 
-## API Endpoints
+## 🌐 الوصول للنظام
+
+### Dashboard الرسومي
+افتح المتصفح واذهب إلى: `http://127.0.0.1:8000/dashboard`
+
+### API Endpoints
 
 - `GET /` - حالة الخادم
+- `GET /dashboard` - لوحة التحكم الرسومية
 - `GET /snapshot` - لقطة حالة السوق (السعر، الاتجاهات)
 - `GET /signals` - الإشارات النشطة من الاستراتيجيات
 - `GET /risk` - حالة إدارة المخاطر
 - `GET /positions` - المراكز النشطة (Paper Trading)
 - `GET /trades` - سجل التداول (Paper Trading)
+- `GET /portfolio` - حالة المحفظة (القيمة، PnL، المراكز)
+- `GET /analytics` - تقرير الأداء الشامل
+- `GET /analytics/suggestions` - اقتراحات تحسين الاستراتيجية
 
 ## البنية
 

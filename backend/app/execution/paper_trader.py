@@ -8,9 +8,10 @@ logger = logging.getLogger(__name__)
 class PaperTrader:
     """محاكي التداول الورقي - تنفيذ الأوامر دون مخاطر حقيقية"""
 
-    def __init__(self, event_bus, risk_manager):
+    def __init__(self, event_bus, risk_manager, portfolio_manager):
         self.event_bus = event_bus
         self.risk_manager = risk_manager
+        self.portfolio_manager = portfolio_manager
 
         # المراكز المحاكاة
         self.positions: Dict[str, Dict[str, Any]] = {}
@@ -33,6 +34,11 @@ class PaperTrader:
         executed_order = self.execute_order(order)
 
         if executed_order:
+            # تحديث PortfolioManager
+            side = "long" if order["direction"] == "BUY" else "short"
+            quantity = order["size"] if order["direction"] == "BUY" else -order["size"]
+            self.portfolio_manager.update_position(order["symbol"], side, quantity, order["entry_price"])
+
             # تحديث RiskManager
             self.risk_manager.update_position(order["symbol"], executed_order)
 

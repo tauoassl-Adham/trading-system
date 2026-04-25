@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Intelligence System - Dashboard</title>
+    <link rel="stylesheet" href="/static/css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard">
+        <header class="header">
+            <h1>🧠 نظام التداول الذكي</h1>
+            <div class="status">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="status-text">جاري التحميل...</span>
+            </div>
+        </header>
+
+        <div class="grid">
+            <!-- Market Overview -->
+            <div class="card">
+                <h2>📊 نظرة على السوق</h2>
+                <div class="metric-grid">
+                    <div class="metric">
+                        <span class="label">السعر الحالي</span>
+                        <span class="value" id="current-price">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">الاتجاه 15m</span>
+                        <span class="value" id="trend-15m">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">الاتجاه 1h</span>
+                        <span class="value" id="trend-1h">--</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">الاتجاه 1d</span>
+                        <span class="value" id="trend-1d">--</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Portfolio Status -->
+            <div class="card">
+                <h2>💰 حالة المحفظة</h2>
+                <div class="metric-grid">
+                    <div class="metric">
+                        <span class="label">إجمالي القيمة</span>
+                        <span class="value" id="total-value">$10,000</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">الرصيد المتاح</span>
+                        <span class="value" id="available-balance">$10,000</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">إجمالي PnL</span>
+                        <span class="value" id="total-pnl">$0.00</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">عدد التداولات</span>
+                        <span class="value" id="total-trades">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Management -->
+            <div class="card">
+                <h2>⚠️ إدارة المخاطر</h2>
+                <div class="metric-grid">
+                    <div class="metric">
+                        <span class="label">الخسارة اليومية</span>
+                        <span class="value" id="daily-loss">$0.00</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">حد الخسارة اليومي</span>
+                        <span class="value" id="daily-limit">$500.00</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">المراكز النشطة</span>
+                        <span class="value" id="active-positions">0</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">إجمالي التعرض</span>
+                        <span class="value" id="total-exposure">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trading Signals -->
+            <div class="card">
+                <h2>🎯 إشارات التداول</h2>
+                <div id="signals-container">
+                    <div class="signal-item">
+                        <span class="strategy-name">تتبع الاتجاه</span>
+                        <span class="signal-status" id="trend-signal">لا توجد إشارة</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Analytics -->
+            <div class="card full-width">
+                <h2>📈 تحليل الأداء</h2>
+                <div class="analytics-grid">
+                    <div class="metric">
+                        <span class="label">معدل الفوز</span>
+                        <span class="value" id="win-rate">0.0%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">عامل الربح</span>
+                        <span class="value" id="profit-factor">0.00</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">نسبة شارب</span>
+                        <span class="value" id="sharpe-ratio">0.00</span>
+                    </div>
+                    <div class="metric">
+                        <span class="label">أقصى انخفاض</span>
+                        <span class="value" id="max-drawdown">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Positions -->
+            <div class="card full-width">
+                <h2>📊 المراكز النشطة</h2>
+                <div id="positions-container">
+                    <p class="no-data">لا توجد مراكز نشطة</p>
+                </div>
+            </div>
+
+            <!-- Recent Trades -->
+            <div class="card full-width">
+                <h2>📋 التداولات الأخيرة</h2>
+                <div id="trades-container">
+                    <p class="no-data">لا توجد تداولات حديثة</p>
+                </div>
+            </div>
+
+            <!-- AI Suggestions -->
+            <div class="card full-width">
+                <h2>🤖 اقتراحات الذكاء الاصطناعي</h2>
+                <div id="suggestions-container">
+                    <div class="suggestion-item">
+                        <span class="suggestion-text">قم بجمع المزيد من التداولات لتحليل أفضل</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
