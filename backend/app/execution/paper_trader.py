@@ -25,7 +25,6 @@ class PaperTrader:
     def on_risk_approved_order(self, data):
         """معالجة الأمر المعتمد من RiskManager"""
         order = data["order"]
-        signal = data["signal"]
         strategy = data["strategy"]
 
         logger.info(f"PaperTrader: Executing order for {order['symbol']}: {order}")
@@ -60,10 +59,18 @@ class PaperTrader:
 
             logger.info(f"PaperTrader: Position opened for {order['symbol']}")
 
-            # التحقق من إغلاق المركز تلقائياً (stop loss / take profit)
-            self.check_position_exit(order["symbol"])
+            # الاشتراك في تحديثات السعر لمراقبة هذا المركز
+            self.event_bus.subscribe("tick", self._on_tick_monitoring)
 
-    def execute_order(self, order: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _on_tick_monitoring(self, data):
+        """مراقبة الأسعار الحية لإغلاق الصفقات تلقائياً"""
+        symbol = data["symbol"]
+        price = data["price"]
+
+        if symbol in self.positions:
+            self.check_position_exit(symbol, price)
+
+    def execute_order(self, order: Dict[str, Any]) -> Dict[str, Any]:
         """تنفيذ الأمر (محاكاة)"""
         # في التداول الحقيقي، هنا ستكون استدعاء API
         # للورقي، نفترض التنفيذ الفوري بالسعر المطلوب
@@ -74,22 +81,37 @@ class PaperTrader:
 
         return executed_order
 
-    def check_position_exit(self, symbol: str):
-        """التحقق من إغلاق المركز تلقائياً"""
+    def check_position_exit(self, symbol: str, current_price: float):
+        """التحقق من إغلاق المركز تلقائياً عند ضرب SL أو TP"""
         if symbol not in self.positions:
             return
 
         position = self.positions[symbol]
-        # نفترض الحصول على السعر الحالي من data_store
-        # للتبسيط، سنستخدم منطق بسيط
+        direction = position["direction"]
+        sl = position.get("stop_loss")
+        tp = position.get("take_profit")
 
-        # في التطبيق الحقيقي، هذا سيتم في loop منفصل
-        # للآن، سنضيف منطق للإغلاق عند stop loss
+        should_close = False
+        reason = ""
 
-        # مثال: إذا كان السعر يصل إلى stop loss، أغلق
-        # هذا يحتاج إلى مراقبة مستمرة
+        if direction == "BUY":
+            if sl and current_price <= sl:
+                should_close = True
+                reason = "STOP_LOSS"
+            elif tp and current_price >= tp:
+                should_close = True
+                reason = "TAKE_PROFIT"
+        elif direction == "SELL":
+            if sl and current_price >= sl:
+                should_close = True
+                reason = "STOP_LOSS"
+            elif tp and current_price <= tp:
+                should_close = True
+                reason = "TAKE_PROFIT"
 
-        pass  # سيتم تطويره لاحقاً
+        if should_close:
+            logger.info(f"PaperTrader: Auto-closing {symbol} due to {reason} at {current_price}")
+            self.close_position(symbol, current_price)
 
     def close_position(self, symbol: str, exit_price: float):
         """إغلاق مركز يدوياً"""

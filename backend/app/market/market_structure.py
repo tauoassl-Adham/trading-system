@@ -21,8 +21,11 @@ class MarketStructure:
         self.event_bus.subscribe("tick", self.on_tick)
 
     def on_tick(self, data):
+        symbol = data["symbol"]
         price = data["price"]
-        self._update_structure(price)
+        # حالياً ندعم رمز واحد في هيكل السوق للتبسيط، أو يمكن توسيعه لاحقاً
+        if symbol == "BTCUSDT":
+            self._update_structure(price)
 
     def _update_structure(self, price):
         # أول تيك
@@ -47,7 +50,7 @@ class MarketStructure:
 
         # فقط إذا صار swing حقيقي
         if updated:
-            print("NEW SWING:", price)
+            logger.info(f"NEW SWING: {price}")
             self._detect_trend()
 
     def _detect_trend(self):

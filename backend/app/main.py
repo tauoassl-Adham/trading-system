@@ -35,7 +35,7 @@ trend_strategy = TrendFollowingStrategy(event_bus, data_store)
 # ⚠️ Risk management layer
 risk_manager = RiskManager(event_bus)
 
-# � Portfolio management layer
+# 📂 Portfolio management layer
 portfolio_manager = PortfolioManager()
 
 # 📊 Analytics layer
@@ -43,19 +43,22 @@ analytics_engine = AnalyticsEngine(portfolio_manager, risk_manager)
 
 # 📈 Execution layer (Paper Trading)
 paper_trader = PaperTrader(event_bus, risk_manager, portfolio_manager)
+
 # ربط PortfolioManager مع تحديث الأسعار
 def on_tick_update(data):
     """تحديث أسعار PortfolioManager عند تلقي tick"""
-    symbol = data.get("symbol", "BTCUSDT")
+    symbol = data.get("symbol")
     price = data.get("price")
-    if price:
+    if symbol and price:
         portfolio_manager.update_prices({symbol: price})
 
 event_bus.subscribe("tick", on_tick_update)
 
 @app.on_event("startup")
 async def startup():
-    asyncio.create_task(stream(event_bus))
+    # استهداف عدة عملات كما في الرؤية
+    symbols = ["BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "ADAUSDT"]
+    asyncio.create_task(stream(event_bus, symbols=symbols))
 
 
 @app.get("/")
@@ -68,9 +71,9 @@ def dashboard():
     return FileResponse("../frontend/dashboard.html", media_type="text/html")
 
 
-@app.get("/snapshot")
-def get_snapshot():
-    return snapshot.get_snapshot()
+@app.get("/snapshot/{symbol}")
+def get_snapshot(symbol: str = "BTCUSDT"):
+    return snapshot.get_snapshot(symbol)
 
 
 @app.get("/signals")
