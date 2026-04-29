@@ -4,35 +4,19 @@ from collections import defaultdict
 logger = logging.getLogger(__name__)
 
 class EventBus:
-    def __init__(self, strict=False):
-        self.subscribers = defaultdict(list)
-        self.strict = strict  # إذا True = يمنع events بدون subscribers
+    def __init__(self):
+        self.subscribers = {}
 
     def subscribe(self, event_type, callback):
         self.subscribers[event_type].append(callback)
-        logger.info(f"[EventBus] Subscribed -> {event_type} | {callback.__name__}")
+        logger.info(f"New subscriber for event: {event_type}")
 
     def publish(self, event_type, data):
-        subs = self.subscribers.get(event_type, [])
-
-        logger.info(f"[EventBus] Event -> {event_type} | Subscribers: {len(subs)}")
-
-        if not subs:
-            if self.strict:
-                logger.error(f"[EventBus] No subscribers for REQUIRED event: {event_type}")
-            else:
-                logger.info(f"[EventBus] No subscribers (ignored): {event_type}")
-            return
-
-        for callback in subs:
-            try:
+        if event_type in self.subscribers:
+            for callback in self.subscribers[event_type]:
                 callback(data)
-
             except Exception as e:
-                logger.error(
-                    f"[EventBus] Callback error | event={event_type} | "
-                    f"handler={callback.__name__} | error={str(e)}"
-                )
+                logger.error(f"Error in {callback.__name__} for {event_type}: {e}")
 
-# Singleton
-event_bus = EventBus(strict=True)
+# هذا السطر هو الأهم: هو الذي يوحد النسخة التي يستوردها الجميع
+event_bus = EventBus()
