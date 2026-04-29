@@ -1,190 +1,1671 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Intelligence System - Dashboard</title>
-    <link rel="stylesheet" href="/static/css/dashboard.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scylla Trading Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #050810;
+    --bg-panel: #080d1a;
+    --bg-card: #0d1525;
+    --bg-card2: #111c30;
+    --border: #1a2a45;
+    --border-glow: #1e3a6e;
+    --accent: #00d4ff;
+    --accent2: #0099cc;
+    --green: #00e676;
+    --green-dim: #00c853;
+    --red: #ff3d5a;
+    --red-dim: #c62828;
+    --yellow: #ffd600;
+    --text-primary: #e8f4ff;
+    --text-secondary: #7a9cc4;
+    --text-dim: #3a5a7a;
+    --mono: 'Share Tech Mono', monospace;
+    --arabic: 'Tajawal', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: var(--arabic);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Glow orbs */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(0, 212, 255, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .orb2 {
+    position: fixed;
+    bottom: -200px;
+    left: -100px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(0, 153, 204, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== HEADER ===== */
+  header {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    height: 60px;
+    background: rgba(8, 13, 26, 0.95);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    position: relative;
+  }
+
+  .logo-icon svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 0 8px var(--accent));
+  }
+
+  .logo-text {
+    font-family: var(--mono);
+    font-size: 20px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  }
+
+  .logo-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    font-family: var(--mono);
+    margin-top: -4px;
+  }
+
+  .header-center {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .market-ticker {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .ticker-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 100px;
+  }
+
+  .ticker-symbol {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .ticker-price {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--text-primary);
+    transition: color 0.3s;
+  }
+
+  .ticker-price.up { color: var(--green); }
+  .ticker-price.down { color: var(--red); }
+  .ticker-price.flash-up { animation: flashUp 0.4s ease; }
+  .ticker-price.flash-down { animation: flashDown 0.4s ease; }
+
+  @keyframes flashUp {
+    0% { color: var(--green); text-shadow: 0 0 10px var(--green); }
+    100% { color: var(--text-primary); text-shadow: none; }
+  }
+
+  @keyframes flashDown {
+    0% { color: var(--red); text-shadow: 0 0 10px var(--red); }
+    100% { color: var(--text-primary); text-shadow: none; }
+  }
+
+  .ticker-change {
+    font-family: var(--mono);
+    font-size: 10px;
+  }
+
+  .ticker-change.up { color: var(--green); }
+  .ticker-change.down { color: var(--red); }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .connection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--red);
+    transition: background 0.3s;
+  }
+
+  .status-dot.connected {
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .time-display {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  /* ===== NAV ===== */
+  nav {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 28px;
+    height: 44px;
+    background: rgba(8, 13, 26, 0.8);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-btn {
+    padding: 6px 18px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--arabic);
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .nav-btn:hover {
+    color: var(--text-secondary);
+    border-color: var(--border);
+  }
+
+  .nav-btn.active {
+    color: var(--accent);
+    border-color: var(--border-glow);
+    background: rgba(0, 212, 255, 0.05);
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.1);
+  }
+
+  /* ===== MAIN LAYOUT ===== */
+  .main {
+    position: relative;
+    z-index: 5;
+    display: grid;
+    grid-template-columns: 280px 1fr 300px;
+    grid-template-rows: auto auto 1fr;
+    gap: 1px;
+    background: var(--border);
+    height: calc(100vh - 104px);
+  }
+
+  .panel {
+    background: var(--bg-panel);
+    overflow: hidden;
+  }
+
+  /* ===== PANELS ===== */
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(13, 21, 37, 0.8);
+  }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .panel-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    background: rgba(0, 212, 255, 0.05);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 3px;
+  }
+
+  /* ===== LEFT PANEL: WATCHLIST ===== */
+  .watchlist {
+    grid-row: 1 / -1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .watchlist-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .watchlist-body::-webkit-scrollbar { width: 3px; }
+  .watchlist-body::-webkit-scrollbar-track { background: transparent; }
+  .watchlist-body::-webkit-scrollbar-thumb { background: var(--border-glow); border-radius: 2px; }
+
+  .asset-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 2px 8px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 4px;
+    background: var(--bg-card);
+  }
+
+  .asset-card:hover, .asset-card.active {
+    border-color: var(--border-glow);
+    background: var(--bg-card2);
+  }
+
+  .asset-card.active {
+    box-shadow: inset 2px 0 0 var(--accent);
+  }
+
+  .asset-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .asset-price {
+    font-family: var(--mono);
+    font-size: 13px;
+    text-align: left;
+    transition: all 0.3s;
+  }
+
+  .asset-full {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .asset-change {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-align: left;
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+
+  .asset-change.up {
+    color: var(--green);
+    background: rgba(0, 230, 118, 0.08);
+  }
+
+  .asset-change.down {
+    color: var(--red);
+    background: rgba(255, 61, 90, 0.08);
+  }
+
+  /* Mini sparkline */
+  .asset-sparkline {
+    grid-column: 1 / -1;
+    height: 24px;
+    margin-top: 4px;
+  }
+
+  .asset-sparkline canvas {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ===== CENTER TOP: CHART AREA ===== */
+  .chart-area {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chart-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(13, 21, 37, 0.8);
+  }
+
+  .chart-symbol {
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+
+  .chart-price-big {
+    font-family: var(--mono);
+    font-size: 22px;
+    color: var(--accent);
+    text-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+  }
+
+  .chart-change-big {
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+
+  .chart-change-big.up {
+    color: var(--green);
+    background: rgba(0, 230, 118, 0.1);
+    border: 1px solid rgba(0, 230, 118, 0.2);
+  }
+
+  .chart-change-big.down {
+    color: var(--red);
+    background: rgba(255, 61, 90, 0.1);
+    border: 1px solid rgba(255, 61, 90, 0.2);
+  }
+
+  .tf-buttons {
+    margin-right: auto;
+    display: flex;
+    gap: 4px;
+  }
+
+  .tf-btn {
+    padding: 3px 10px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+
+  .tf-btn:hover { color: var(--text-secondary); border-color: var(--border-glow); }
+  .tf-btn.active {
+    color: var(--accent);
+    border-color: var(--accent);
+    background: rgba(0, 212, 255, 0.08);
+  }
+
+  .chart-canvas-wrap {
+    flex: 1;
+    position: relative;
+    background: var(--bg-panel);
+    overflow: hidden;
+  }
+
+  #mainChart {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Chart placeholder while loading */
+  .chart-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 2px;
+  }
+
+  .chart-loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== CENTER BOTTOM: STATS BAR ===== */
+  .stats-bar {
+    grid-column: 2;
+    grid-row: 3;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    flex: 1;
+  }
+
+  .stat-cell {
+    background: var(--bg-panel);
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  .stat-value {
+    font-family: var(--mono);
+    font-size: 20px;
+    color: var(--text-primary);
+    line-height: 1;
+  }
+
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.accent { color: var(--accent); }
+
+  .stat-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  /* ===== RIGHT PANEL ===== */
+  .right-panel {
+    grid-row: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    background: var(--border);
+  }
+
+  /* Order Book */
+  .orderbook {
+    background: var(--bg-panel);
+    display: flex;
+    flex-direction: column;
+    flex: 1.2;
+  }
+
+  .ob-body {
+    padding: 8px;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .ob-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 6px;
+    border-radius: 3px;
+    cursor: default;
+    transition: background 0.1s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ob-row:hover { background: rgba(255,255,255,0.03); }
+
+  .ob-row .fill-bar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    opacity: 0.08;
+    transition: width 0.3s;
+    border-radius: 3px;
+  }
+
+  .ob-ask .fill-bar { background: var(--red); right: 0; }
+  .ob-bid .fill-bar { background: var(--green); right: 0; }
+
+  .ob-price-ask { color: var(--red); }
+  .ob-price-bid { color: var(--green); }
+  .ob-size { color: var(--text-secondary); text-align: center; }
+  .ob-total { color: var(--text-dim); text-align: left; }
+
+  .ob-header {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    padding: 4px 6px 6px;
+    letter-spacing: 1px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  .ob-spread {
+    text-align: center;
+    padding: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--yellow);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: rgba(255, 214, 0, 0.03);
+    margin: 4px 0;
+  }
+
+  /* Live Feed */
+  .live-feed {
+    background: var(--bg-panel);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .feed-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+  }
+
+  .feed-body::-webkit-scrollbar { width: 2px; }
+  .feed-body::-webkit-scrollbar-thumb { background: var(--border-glow); }
+
+  .feed-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 8px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    font-family: var(--mono);
+    font-size: 11px;
+    animation: fadeSlide 0.3s ease;
+    border-left: 2px solid transparent;
+  }
+
+  @keyframes fadeSlide {
+    from { opacity: 0; transform: translateX(8px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  .feed-item.buy {
+    border-left-color: var(--green);
+    background: rgba(0, 230, 118, 0.04);
+  }
+
+  .feed-item.sell {
+    border-left-color: var(--red);
+    background: rgba(255, 61, 90, 0.04);
+  }
+
+  .feed-symbol { color: var(--text-secondary); }
+  .feed-price-buy { color: var(--green); }
+  .feed-price-sell { color: var(--red); }
+  .feed-time { color: var(--text-dim); font-size: 10px; }
+
+  /* ===== BOTTOM LOG ===== */
+  .log-bar {
+    grid-column: 1 / -1;
+    height: 32px;
+    background: rgba(5, 8, 16, 0.95);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px;
+    overflow: hidden;
+    position: relative;
+    z-index: 10;
+  }
+
+  .log-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .log-text {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .log-text span { margin: 0 16px; color: var(--text-dim); }
+
+  /* ===== TRADE PANEL ===== */
+  .trade-panel {
+    background: var(--bg-panel);
+    flex: 0.8;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .trade-body { padding: 12px; flex: 1; }
+
+  .trade-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+
+  .trade-tab {
+    padding: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    font-family: var(--arabic);
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+    color: var(--text-dim);
+  }
+
+  .trade-tab.buy:hover, .trade-tab.buy.active {
+    color: var(--green);
+    border-color: var(--green);
+    background: rgba(0, 230, 118, 0.08);
+  }
+
+  .trade-tab.sell:hover, .trade-tab.sell.active {
+    color: var(--red);
+    border-color: var(--red);
+    background: rgba(255, 61, 90, 0.08);
+  }
+
+  .input-group {
+    margin-bottom: 10px;
+  }
+
+  .input-label {
+    display: block;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    margin-bottom: 5px;
+  }
+
+  .input-field {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .input-field:focus { border-color: var(--accent); }
+
+  .execute-btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    font-family: var(--arabic);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+
+  .execute-btn.buy {
+    background: linear-gradient(135deg, #00c853, #00e676);
+    color: #000;
+    box-shadow: 0 4px 15px rgba(0, 230, 118, 0.25);
+  }
+
+  .execute-btn.buy:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 230, 118, 0.35);
+  }
+
+  .execute-btn.sell {
+    background: linear-gradient(135deg, #c62828, #ff3d5a);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(255, 61, 90, 0.25);
+  }
+
+  /* ===== TICKER SEPARATOR ===== */
+  .sep {
+    width: 1px;
+    height: 30px;
+    background: var(--border);
+  }
+
+  /* ===== RESPONSIVE MINI CHART ===== */
+  .candle-wrap {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+
+  /* Notification */
+  .notification {
+    position: fixed;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-card2);
+    border: 1px solid var(--border-glow);
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    z-index: 100;
+    opacity: 0;
+    transition: all 0.3s;
+    white-space: nowrap;
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.15);
+  }
+
+  .notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+</style>
 </head>
 <body>
-    <div class="dashboard">
-        <header class="header">
-            <h1>🧠 نظام التداول الذكي</h1>
-            <div class="status">
-                <span class="status-dot" id="status-dot"></span>
-                <span id="status-text">جاري التحميل...</span>
-            </div>
-        </header>
 
-        <div class="grid">
-            <!-- Market Overview -->
-            <div class="card">
-                <h2>📊 نظرة على السوق</h2>
-                <div class="metric-grid">
-                    <div class="metric">
-                        <span class="label">السعر الحالي</span>
-                        <span class="value" id="current-price">--</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">الاتجاه 15m</span>
-                        <span class="value" id="trend-15m">--</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">الاتجاه 1h</span>
-                        <span class="value" id="trend-1h">--</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">الاتجاه 1d</span>
-                        <span class="value" id="trend-1d">--</span>
-                    </div>
-                </div>
-            </div>
+<div class="orb2"></div>
 
-            <!-- Portfolio Status -->
-            <div class="card">
-                <h2>💰 حالة المحفظة</h2>
-                <div class="metric-grid">
-                    <div class="metric">
-                        <span class="label">إجمالي القيمة</span>
-                        <span class="value" id="total-value">$10,000</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">الرصيد المتاح</span>
-                        <span class="value" id="available-balance">$10,000</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">إجمالي PnL</span>
-                        <span class="value" id="total-pnl">$0.00</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">عدد التداولات</span>
-                        <span class="value" id="total-trades">0</span>
-                    </div>
-                </div>
-            </div>
+<!-- HEADER -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="20,2 38,32 2,32" fill="none" stroke="#00d4ff" stroke-width="1.5"/>
+        <polygon points="20,10 30,28 10,28" fill="rgba(0,212,255,0.1)" stroke="#00d4ff" stroke-width="1"/>
+        <line x1="20" y1="2" x2="20" y2="32" stroke="#00d4ff" stroke-width="0.5" opacity="0.4"/>
+        <circle cx="20" cy="20" r="3" fill="#00d4ff"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-text">SCYLLA</div>
+      <div class="logo-sub">TRADING PLATFORM v1.0</div>
+    </div>
+  </div>
 
-            <!-- Risk Management -->
-            <div class="card">
-                <h2>⚠️ إدارة المخاطر</h2>
-                <div class="metric-grid">
-                    <div class="metric">
-                        <span class="label">الخسارة اليومية</span>
-                        <span class="value" id="daily-loss">$0.00</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">حد الخسارة اليومي</span>
-                        <span class="value" id="daily-limit">$500.00</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">المراكز النشطة</span>
-                        <span class="value" id="active-positions">0</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">إجمالي التعرض</span>
-                        <span class="value" id="total-exposure">$0.00</span>
-                    </div>
-                </div>
-            </div>
+  <div class="market-ticker" id="marketTicker">
+    <div class="ticker-item">
+      <div class="ticker-symbol">BTC/USDT</div>
+      <div class="ticker-price" id="hdr-BTCUSDT">--,---</div>
+      <div class="ticker-change" id="hdr-BTCUSDT-chg">--</div>
+    </div>
+    <div class="sep"></div>
+    <div class="ticker-item">
+      <div class="ticker-symbol">ETH/USDT</div>
+      <div class="ticker-price" id="hdr-ETHUSDT">-,---</div>
+      <div class="ticker-change" id="hdr-ETHUSDT-chg">--</div>
+    </div>
+    <div class="sep"></div>
+    <div class="ticker-item">
+      <div class="ticker-symbol">BNB/USDT</div>
+      <div class="ticker-price" id="hdr-BNBUSDT">---</div>
+      <div class="ticker-change" id="hdr-BNBUSDT-chg">--</div>
+    </div>
+  </div>
 
-            <!-- Manual Trading -->
-            <div class="card">
-                <h2>📝 إدخال صفقة يدوية</h2>
-                <form id="manual-trade-form" class="trade-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="symbol">العملة</label>
-                            <select id="symbol" required>
-                                <option value="BTCUSDT">BTC/USDT</option>
-                                <option value="ETHUSDT">ETH/USDT</option>
-                                <option value="BNBUSDT">BNB/USDT</option>
-                                <option value="ADAUSDT">ADA/USDT</option>
-                                <option value="SOLUSDT">SOL/USDT</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="direction">الاتجاه</label>
-                            <select id="direction" required>
-                                <option value="BUY">شراء (Long)</option>
-                                <option value="SELL">بيع (Short)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="quantity">الكمية</label>
-                            <input type="number" id="quantity" step="0.000001" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="entry-price">سعر الدخول</label>
-                            <input type="number" id="entry-price" step="0.01" min="0" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label for="stop-loss">Stop Loss</label>
-                            <input type="number" id="stop-loss" step="0.01" min="0" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="take-profit">Take Profit</label>
-                            <input type="number" id="take-profit" step="0.01" min="0">
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-primary">إدخال الصفقة</button>
-                </form>
-                <div id="trade-result" class="trade-result"></div>
-            </div>
+  <div class="header-right">
+    <div class="connection-status">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">DISCONNECTED</span>
+    </div>
+    <div class="sep"></div>
+    <div class="time-display" id="timeDisplay">--:--:--</div>
+  </div>
+</header>
 
-            <!-- Performance Analytics -->
-            <div class="card full-width">
-                <h2>📈 تحليل الأداء</h2>
-                <div class="analytics-grid">
-                    <div class="metric">
-                        <span class="label">معدل الفوز</span>
-                        <span class="value" id="win-rate">0.0%</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">عامل الربح</span>
-                        <span class="value" id="profit-factor">0.00</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">نسبة شارب</span>
-                        <span class="value" id="sharpe-ratio">0.00</span>
-                    </div>
-                    <div class="metric">
-                        <span class="label">أقصى انخفاض</span>
-                        <span class="value" id="max-drawdown">$0.00</span>
-                    </div>
-                </div>
-            </div>
+<!-- NAV -->
+<nav>
+  <button class="nav-btn active">لوحة التحكم</button>
+  <button class="nav-btn">المحفظة</button>
+  <button class="nav-btn">الصفقات</button>
+  <button class="nav-btn">الاستراتيجيات</button>
+  <button class="nav-btn">الأخبار</button>
+  <button class="nav-btn">التحليلات</button>
+</nav>
 
-            <!-- Active Positions -->
-            <div class="card full-width">
-                <h2>📊 المراكز النشطة</h2>
-                <div id="positions-container">
-                    <p class="no-data">لا توجد مراكز نشطة</p>
-                </div>
-            </div>
+<!-- MAIN -->
+<div class="main">
 
-            <!-- Recent Trades -->
-            <div class="card full-width">
-                <h2>📋 التداولات الأخيرة</h2>
-                <div id="trades-container">
-                    <p class="no-data">لا توجد تداولات حديثة</p>
-                </div>
-            </div>
+  <!-- LEFT: WATCHLIST -->
+  <div class="panel watchlist">
+    <div class="panel-header">
+      <span class="panel-title">WATCHLIST</span>
+      <span class="panel-badge" id="watchlistCount">3 ASSETS</span>
+    </div>
+    <div class="watchlist-body" id="watchlistBody">
 
-            <!-- AI Suggestions -->
-            <div class="card full-width">
-                <h2>🤖 اقتراحات الذكاء الاصطناعي</h2>
-                <div id="suggestions-container">
-                    <div class="suggestion-item">
-                        <span class="suggestion-text">قم بجمع المزيد من التداولات لتحليل أفضل</span>
-                    </div>
-                </div>
-            </div>
+      <div class="asset-card active" data-symbol="BTCUSDT">
+        <div class="asset-name">BTC/USDT</div>
+        <div class="asset-price up" id="wl-BTCUSDT">--,---</div>
+        <div class="asset-full">Bitcoin</div>
+        <div class="asset-change up" id="wl-BTCUSDT-chg">+0.00%</div>
+        <div class="asset-sparkline">
+          <canvas id="spark-BTCUSDT" width="240" height="24"></canvas>
         </div>
+      </div>
+
+      <div class="asset-card" data-symbol="ETHUSDT">
+        <div class="asset-name">ETH/USDT</div>
+        <div class="asset-price" id="wl-ETHUSDT">-,---</div>
+        <div class="asset-full">Ethereum</div>
+        <div class="asset-change" id="wl-ETHUSDT-chg">+0.00%</div>
+        <div class="asset-sparkline">
+          <canvas id="spark-ETHUSDT" width="240" height="24"></canvas>
+        </div>
+      </div>
+
+      <div class="asset-card" data-symbol="BNBUSDT">
+        <div class="asset-name">BNB/USDT</div>
+        <div class="asset-price" id="wl-BNBUSDT">---</div>
+        <div class="asset-full">BNB</div>
+        <div class="asset-change" id="wl-BNBUSDT-chg">+0.00%</div>
+        <div class="asset-sparkline">
+          <canvas id="spark-BNBUSDT" width="240" height="24"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CENTER TOP: CHART -->
+  <div class="panel chart-area">
+    <div class="chart-toolbar">
+      <div class="chart-symbol" id="chartSymbol">BTC/USDT</div>
+      <div class="chart-price-big" id="chartPrice">--,---.--</div>
+      <div class="chart-change-big up" id="chartChange">+0.00%</div>
+      <div class="tf-buttons">
+        <button class="tf-btn">1m</button>
+        <button class="tf-btn active">5m</button>
+        <button class="tf-btn">15m</button>
+        <button class="tf-btn">1h</button>
+        <button class="tf-btn">4h</button>
+        <button class="tf-btn">1d</button>
+      </div>
+    </div>
+    <div class="chart-canvas-wrap">
+      <canvas id="mainChart"></canvas>
+      <div class="chart-loading" id="chartLoading">
+        <div class="chart-loading-spinner"></div>
+        <div>CONNECTING TO BINANCE...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CENTER BOTTOM: STATS -->
+  <div class="panel stats-bar">
+    <div class="stats-grid">
+      <div class="stat-cell">
+        <div class="stat-label">LAST PRICE</div>
+        <div class="stat-value accent" id="stat-price">--</div>
+        <div class="stat-sub" id="stat-price-sub">BTC/USDT</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">24H CHANGE</div>
+        <div class="stat-value green" id="stat-change">+0.00%</div>
+        <div class="stat-sub" id="stat-change-sub">vs yesterday</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">TRADES / SEC</div>
+        <div class="stat-value" id="stat-tps">0</div>
+        <div class="stat-sub">live ticks</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">LATENCY</div>
+        <div class="stat-value green" id="stat-latency">-- ms</div>
+        <div class="stat-sub">ws roundtrip</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: ORDER BOOK + FEED + TRADE -->
+  <div class="right-panel">
+
+    <!-- Order Book -->
+    <div class="panel orderbook">
+      <div class="panel-header">
+        <span class="panel-title">ORDER BOOK</span>
+        <span class="panel-badge" id="ob-symbol">BTC/USDT</span>
+      </div>
+      <div class="ob-body">
+        <div class="ob-header">
+          <span>PRICE</span>
+          <span style="text-align:center">SIZE</span>
+          <span style="text-align:left">TOTAL</span>
+        </div>
+        <div id="askRows"></div>
+        <div class="ob-spread" id="obSpread">SPREAD: --</div>
+        <div id="bidRows"></div>
+      </div>
     </div>
 
-    <script src="/static/js/dashboard.js"></script>
+    <!-- Trade Panel -->
+    <div class="panel trade-panel">
+      <div class="panel-header">
+        <span class="panel-title">PAPER TRADE</span>
+        <span class="panel-badge">SIMULATION</span>
+      </div>
+      <div class="trade-body">
+        <div class="trade-tabs">
+          <button class="trade-tab buy active" id="buyTab">شراء</button>
+          <button class="trade-tab sell" id="sellTab">بيع</button>
+        </div>
+        <div class="input-group">
+          <label class="input-label">QUANTITY (USDT)</label>
+          <input type="number" class="input-field" id="tradeQty" value="100" placeholder="0.00">
+        </div>
+        <div class="input-group">
+          <label class="input-label">PRICE</label>
+          <input type="number" class="input-field" id="tradePrice" placeholder="Market">
+        </div>
+        <button class="execute-btn buy" id="executeBtn">تنفيذ شراء</button>
+      </div>
+    </div>
+
+    <!-- Live Feed -->
+    <div class="panel live-feed">
+      <div class="panel-header">
+        <span class="panel-title">LIVE FEED</span>
+        <span class="panel-badge" id="feedCount">0 TICKS</span>
+      </div>
+      <div class="feed-body" id="feedBody"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- LOG BAR -->
+<div class="log-bar">
+  <div class="log-label">LOG</div>
+  <div class="log-text" id="logText">Initializing Scylla Trading Platform...</div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification"></div>
+
+<script>
+// ==========================================
+//  SCYLLA DASHBOARD — JavaScript Engine
+// ==========================================
+
+const WS_URL = 'ws://127.0.0.1:8000/ws/dashboard';
+const BINANCE_WS = 'wss://stream.binance.com:9443/stream?streams=btcusdt@trade/ethusdt@trade/bnbusdt@trade/btcusdt@depth5@100ms';
+
+// State
+const state = {
+  prices: { BTCUSDT: 0, ETHUSDT: 0, BNBUSDT: 0 },
+  prevPrices: { BTCUSDT: 0, ETHUSDT: 0, BNBUSDT: 0 },
+  open24: { BTCUSDT: 0, ETHUSDT: 0, BNBUSDT: 0 },
+  sparkData: { BTCUSDT: [], ETHUSDT: [], BNBUSDT: [] },
+  candleData: [],
+  activeSymbol: 'BTCUSDT',
+  tradeMode: 'buy',
+  feedCount: 0,
+  tpsCount: 0,
+  tps: 0,
+  connected: false,
+  connectedBinance: false,
+};
+
+// ==========================================
+// CLOCK
+// ==========================================
+function updateClock() {
+  const now = new Date();
+  document.getElementById('timeDisplay').textContent =
+    now.toLocaleTimeString('en-US', { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ==========================================
+// TPS COUNTER
+// ==========================================
+setInterval(() => {
+  state.tps = state.tpsCount;
+  state.tpsCount = 0;
+  document.getElementById('stat-tps').textContent = state.tps;
+}, 1000);
+
+// ==========================================
+// FORMAT HELPERS
+// ==========================================
+function fmt(price, symbol) {
+  if (!price) return '--';
+  if (symbol === 'BTCUSDT') return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (symbol === 'ETHUSDT') return price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return price.toFixed(2);
+}
+
+function fmtChange(price, open) {
+  if (!open || !price) return '+0.00%';
+  const pct = ((price - open) / open) * 100;
+  const sign = pct >= 0 ? '+' : '';
+  return sign + pct.toFixed(2) + '%';
+}
+
+function isPositive(price, open) {
+  if (!open) return true;
+  return price >= open;
+}
+
+function now12() {
+  return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+}
+
+// ==========================================
+// LOG
+// ==========================================
+const logs = [];
+function log(msg) {
+  const ts = now12();
+  logs.push(`[${ts}] ${msg}`);
+  if (logs.length > 50) logs.shift();
+  const txt = logs.slice(-5).join('  |  ');
+  document.getElementById('logText').textContent = txt;
+}
+
+// ==========================================
+// NOTIFICATION
+// ==========================================
+function notify(msg) {
+  const el = document.getElementById('notification');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ==========================================
+// SPARKLINE DRAWING
+// ==========================================
+function drawSparkline(symbol) {
+  const canvas = document.getElementById(`spark-${symbol}`);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const data = state.sparkData[symbol];
+  if (data.length < 2) return;
+
+  const w = canvas.offsetWidth || 240;
+  const h = canvas.offsetHeight || 24;
+  canvas.width = w;
+  canvas.height = h;
+
+  ctx.clearRect(0, 0, w, h);
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+
+  const isUp = data[data.length - 1] >= data[0];
+  const color = isUp ? '#00e676' : '#ff3d5a';
+
+  ctx.beginPath();
+  data.forEach((v, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((v - min) / range) * (h - 4) - 2;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+
+  // Fill
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, isUp ? 'rgba(0,230,118,0.15)' : 'rgba(255,61,90,0.15)');
+  grad.addColorStop(1, 'transparent');
+  ctx.fillStyle = grad;
+  ctx.fill();
+}
+
+// ==========================================
+// MAIN CHART (Candlestick via Canvas)
+// ==========================================
+let chartData = []; // [{o,h,l,c,t}]
+let currentCandle = null;
+const CANDLE_COUNT = 60;
+
+function buildCandle(price, ts) {
+  const interval = 60; // 1 minute candles
+  const t = Math.floor(ts / interval) * interval;
+
+  if (!currentCandle || currentCandle.t !== t) {
+    if (currentCandle) {
+      chartData.push({ ...currentCandle });
+      if (chartData.length > CANDLE_COUNT) chartData.shift();
+    }
+    currentCandle = { t, o: price, h: price, l: price, c: price };
+  } else {
+    currentCandle.h = Math.max(currentCandle.h, price);
+    currentCandle.l = Math.min(currentCandle.l, price);
+    currentCandle.c = price;
+  }
+}
+
+function drawChart() {
+  const canvas = document.getElementById('mainChart');
+  if (!canvas) return;
+  const wrap = canvas.parentElement;
+  const W = wrap.offsetWidth;
+  const H = wrap.offsetHeight;
+  if (!W || !H) return;
+
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+
+  const allCandles = currentCandle ? [...chartData, currentCandle] : chartData;
+  if (allCandles.length < 2) return;
+
+  // Hide loading
+  document.getElementById('chartLoading').style.display = 'none';
+
+  const pad = { top: 20, bottom: 30, left: 10, right: 70 };
+  const chartW = W - pad.left - pad.right;
+  const chartH = H - pad.top - pad.bottom;
+
+  const highs = allCandles.map(c => c.h);
+  const lows = allCandles.map(c => c.l);
+  const maxP = Math.max(...highs);
+  const minP = Math.min(...lows);
+  const range = maxP - minP || 1;
+
+  const candleW = Math.max(2, (chartW / allCandles.length) * 0.7);
+  const gap = chartW / allCandles.length;
+
+  function priceY(p) {
+    return pad.top + chartH - ((p - minP) / range) * chartH;
+  }
+
+  // Background grid
+  ctx.strokeStyle = 'rgba(26, 42, 69, 0.6)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = pad.top + (chartH / 5) * i;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, y);
+    ctx.lineTo(W - pad.right, y);
+    ctx.stroke();
+
+    const p = maxP - (range / 5) * i;
+    ctx.fillStyle = 'rgba(122, 156, 196, 0.5)';
+    ctx.font = '10px Share Tech Mono';
+    ctx.textAlign = 'left';
+    ctx.fillText(p.toFixed(0), W - pad.right + 5, y + 3);
+  }
+
+  // Candles
+  allCandles.forEach((c, i) => {
+    const x = pad.left + gap * i + gap / 2;
+    const isUp = c.c >= c.o;
+    const color = isUp ? '#00e676' : '#ff3d5a';
+
+    // Wick
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(x, priceY(c.h));
+    ctx.lineTo(x, priceY(c.l));
+    ctx.stroke();
+
+    // Body
+    const bodyTop = priceY(Math.max(c.o, c.c));
+    const bodyBot = priceY(Math.min(c.o, c.c));
+    const bodyH = Math.max(1, bodyBot - bodyTop);
+
+    ctx.fillStyle = isUp ? 'rgba(0,230,118,0.8)' : 'rgba(255,61,90,0.8)';
+    ctx.fillRect(x - candleW / 2, bodyTop, candleW, bodyH);
+  });
+
+  // Current price line
+  if (state.prices[state.activeSymbol]) {
+    const py = priceY(state.prices[state.activeSymbol]);
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(0,212,255,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pad.left, py);
+    ctx.lineTo(W - pad.right, py);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = 'rgba(0,212,255,0.9)';
+    ctx.fillRect(W - pad.right, py - 9, pad.right - 2, 18);
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 10px Share Tech Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText(state.prices[state.activeSymbol].toFixed(0), W - pad.right + (pad.right - 2) / 2, py + 3);
+  }
+}
+
+setInterval(drawChart, 500);
+
+// ==========================================
+// ORDER BOOK (SIMULATED)
+// ==========================================
+function updateOrderBook(price) {
+  if (!price) return;
+  const asks = [];
+  const bids = [];
+  for (let i = 0; i < 8; i++) {
+    const askP = price * (1 + (0.0001 + Math.random() * 0.0005) * (i + 1));
+    const bidP = price * (1 - (0.0001 + Math.random() * 0.0005) * (i + 1));
+    const askS = (Math.random() * 2 + 0.1).toFixed(3);
+    const bidS = (Math.random() * 2 + 0.1).toFixed(3);
+    asks.push({ p: askP, s: askS, t: (askP * askS).toFixed(0) });
+    bids.push({ p: bidP, s: bidS, t: (bidP * bidS).toFixed(0) });
+  }
+
+  asks.sort((a, b) => a.p - b.p);
+  const maxT = Math.max(...asks.map(a => +a.t), ...bids.map(b => +b.t));
+
+  const askRows = document.getElementById('askRows');
+  const bidRows = document.getElementById('bidRows');
+
+  askRows.innerHTML = asks.slice().reverse().map(a => {
+    const w = (+a.t / maxT * 100).toFixed(0);
+    return `<div class="ob-row ob-ask">
+      <div class="fill-bar" style="width:${w}%"></div>
+      <span class="ob-price-ask">${a.p.toFixed(1)}</span>
+      <span class="ob-size">${a.s}</span>
+      <span class="ob-total">${(+a.t).toLocaleString()}</span>
+    </div>`;
+  }).join('');
+
+  if (asks.length && bids.length) {
+    const spread = (asks[0].p - bids[0].p).toFixed(2);
+    document.getElementById('obSpread').textContent = `SPREAD: ${spread}`;
+  }
+
+  bidRows.innerHTML = bids.map(b => {
+    const w = (+b.t / maxT * 100).toFixed(0);
+    return `<div class="ob-row ob-bid">
+      <div class="fill-bar" style="width:${w}%"></div>
+      <span class="ob-price-bid">${b.p.toFixed(1)}</span>
+      <span class="ob-size">${b.s}</span>
+      <span class="ob-total">${(+b.t).toLocaleString()}</span>
+    </div>`;
+  }).join('');
+}
+
+// ==========================================
+// LIVE FEED
+// ==========================================
+function addFeedItem(symbol, price, isBuy) {
+  const feed = document.getElementById('feedBody');
+  const div = document.createElement('div');
+  div.className = `feed-item ${isBuy ? 'buy' : 'sell'}`;
+  div.innerHTML = `
+    <span class="feed-symbol">${symbol.replace('USDT', '/USDT')}</span>
+    <span class="${isBuy ? 'feed-price-buy' : 'feed-price-sell'}">${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+    <span class="feed-time">${now12()}</span>
+  `;
+  feed.insertBefore(div, feed.firstChild);
+
+  // Keep only last 50
+  while (feed.children.length > 50) feed.removeChild(feed.lastChild);
+
+  state.feedCount++;
+  document.getElementById('feedCount').textContent = `${state.feedCount} TICKS`;
+}
+
+// ==========================================
+// UPDATE UI FROM TICK
+// ==========================================
+function processTick(symbol, price) {
+  const prev = state.prices[symbol];
+  state.prevPrices[symbol] = prev;
+  state.prices[symbol] = price;
+
+  // First price = set open
+  if (!state.open24[symbol]) state.open24[symbol] = price;
+
+  // Sparkline
+  state.sparkData[symbol].push(price);
+  if (state.sparkData[symbol].length > 60) state.sparkData[symbol].shift();
+  drawSparkline(symbol);
+
+  const pos = isPositive(price, state.open24[symbol]);
+  const chgStr = fmtChange(price, state.open24[symbol]);
+  const priceStr = fmt(price, symbol);
+
+  // Watchlist
+  const wlEl = document.getElementById(`wl-${symbol}`);
+  const wlChg = document.getElementById(`wl-${symbol}-chg`);
+  if (wlEl) {
+    wlEl.textContent = priceStr;
+    wlEl.className = `asset-price ${pos ? 'up' : 'down'}`;
+  }
+  if (wlChg) {
+    wlChg.textContent = chgStr;
+    wlChg.className = `asset-change ${pos ? 'up' : 'down'}`;
+  }
+
+  // Header ticker
+  const hdrEl = document.getElementById(`hdr-${symbol}`);
+  const hdrChg = document.getElementById(`hdr-${symbol}-chg`);
+  if (hdrEl) {
+    hdrEl.textContent = priceStr;
+    const dir = price > prev ? 'up' : 'down';
+    hdrEl.className = `ticker-price ${dir}`;
+    hdrEl.classList.add(`flash-${dir}`);
+    setTimeout(() => hdrEl.classList.remove(`flash-${dir}`), 400);
+  }
+  if (hdrChg) {
+    hdrChg.textContent = chgStr;
+    hdrChg.className = `ticker-change ${pos ? 'up' : 'down'}`;
+  }
+
+  // Active symbol
+  if (symbol === state.activeSymbol) {
+    document.getElementById('chartPrice').textContent = priceStr;
+    document.getElementById('chartChange').textContent = chgStr;
+    document.getElementById('chartChange').className = `chart-change-big ${pos ? 'up' : 'down'}`;
+    document.getElementById('stat-price').textContent = priceStr;
+    document.getElementById('stat-change').textContent = chgStr;
+    document.getElementById('stat-change').className = `stat-value ${pos ? 'green' : 'red'}`;
+    document.getElementById('tradePrice').placeholder = price.toFixed(2);
+
+    // Candle
+    buildCandle(price, Date.now() / 1000);
+
+    // Order book (throttled)
+    if (Math.random() < 0.1) updateOrderBook(price);
+  }
+
+  // Feed
+  const isBuy = price >= prev;
+  addFeedItem(symbol, price, isBuy);
+}
+
+// ==========================================
+// BINANCE DIRECT WS (fallback / primary data)
+// ==========================================
+let binanceWS = null;
+let latencyPing = Date.now();
+
+function connectBinance() {
+  log('Connecting to Binance WebSocket...');
+  binanceWS = new WebSocket(BINANCE_WS);
+
+  binanceWS.onopen = () => {
+    state.connectedBinance = true;
+    updateConnectionStatus();
+    log('Connected to Binance Streams.');
+    notify('Binance Connected');
+  };
+
+  binanceWS.onmessage = (evt) => {
+    try {
+      const raw = JSON.parse(evt.data);
+      const data = raw.data || raw;
+      state.tpsCount++;
+
+      // Price tick
+      if (data.e === 'trade') {
+        const symbol = data.s;
+        const price = parseFloat(data.p);
+        if (symbol && price > 0) processTick(symbol, price);
+
+        // Latency estimate
+        const serverTs = data.T;
+        const diff = Date.now() - serverTs;
+        document.getElementById('stat-latency').textContent = `${Math.abs(diff)} ms`;
+        const latEl = document.getElementById('stat-latency');
+        latEl.className = `stat-value ${diff < 200 ? 'green' : diff < 500 ? '' : 'red'}`;
+      }
+
+      // Depth (order book)
+      if (data.e === 'depthUpdate') {
+        // Will use simulated OB for now
+      }
+
+    } catch (e) {
+      // ignore parse errors
+    }
+  };
+
+  binanceWS.onclose = () => {
+    state.connectedBinance = false;
+    updateConnectionStatus();
+    log('Binance disconnected. Reconnecting in 3s...');
+    setTimeout(connectBinance, 3000);
+  };
+
+  binanceWS.onerror = () => {
+    log('Binance WS error.');
+  };
+}
+
+// ==========================================
+// BACKEND WS (signals & system events)
+// ==========================================
+let backendWS = null;
+
+function connectBackend() {
+  try {
+    backendWS = new WebSocket(WS_URL);
+
+    backendWS.onopen = () => {
+      state.connected = true;
+      updateConnectionStatus();
+      log('Backend system connected.');
+    };
+
+    backendWS.onmessage = (evt) => {
+      try {
+        const data = JSON.parse(evt.data);
+        log(`Signal: ${JSON.stringify(data)}`);
+        if (data.action) notify(`Signal: ${data.action} @ ${data.entry || ''}`);
+      } catch (e) {}
+    };
+
+    backendWS.onclose = () => {
+      state.connected = false;
+      updateConnectionStatus();
+      setTimeout(connectBackend, 5000);
+    };
+
+    backendWS.onerror = () => {};
+  } catch (e) {}
+}
+
+// ==========================================
+// CONNECTION STATUS
+// ==========================================
+function updateConnectionStatus() {
+  const dot = document.getElementById('statusDot');
+  const txt = document.getElementById('statusText');
+  const ok = state.connectedBinance || state.connected;
+  dot.className = `status-dot ${ok ? 'connected' : ''}`;
+  txt.textContent = ok ? 'LIVE' : 'DISCONNECTED';
+}
+
+// ==========================================
+// WATCHLIST CLICK
+// ==========================================
+document.querySelectorAll('.asset-card').forEach(card => {
+  card.addEventListener('click', () => {
+    document.querySelectorAll('.asset-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    const sym = card.dataset.symbol;
+    state.activeSymbol = sym;
+    chartData = [];
+    currentCandle = null;
+    state.open24[sym] = state.prices[sym] || 0;
+    document.getElementById('chartSymbol').textContent = sym.replace('USDT', '/USDT');
+    document.getElementById('ob-symbol').textContent = sym.replace('USDT', '/USDT');
+    document.getElementById('stat-price-sub').textContent = sym.replace('USDT', '/USDT');
+    document.getElementById('chartLoading').style.display = 'flex';
+    log(`Switched to ${sym}`);
+  });
+});
+
+// ==========================================
+// TRADE TABS
+// ==========================================
+document.getElementById('buyTab').addEventListener('click', () => {
+  state.tradeMode = 'buy';
+  document.getElementById('buyTab').classList.add('active');
+  document.getElementById('sellTab').classList.remove('active');
+  document.getElementById('executeBtn').textContent = 'تنفيذ شراء';
+  document.getElementById('executeBtn').className = 'execute-btn buy';
+});
+
+document.getElementById('sellTab').addEventListener('click', () => {
+  state.tradeMode = 'sell';
+  document.getElementById('sellTab').classList.add('active');
+  document.getElementById('buyTab').classList.remove('active');
+  document.getElementById('executeBtn').textContent = 'تنفيذ بيع';
+  document.getElementById('executeBtn').className = 'execute-btn sell';
+});
+
+// ==========================================
+// EXECUTE BUTTON
+// ==========================================
+document.getElementById('executeBtn').addEventListener('click', () => {
+  const qty = document.getElementById('tradeQty').value;
+  const price = state.prices[state.activeSymbol];
+  if (!price || !qty) return notify('أدخل الكمية أولاً');
+  const side = state.tradeMode === 'buy' ? 'BUY' : 'SELL';
+  notify(`Paper ${side}: ${qty} USDT @ ${price.toFixed(2)}`);
+  log(`Paper Order: ${side} ${qty} USDT ${state.activeSymbol} @ ${price.toFixed(2)}`);
+});
+
+// ==========================================
+// TIMEFRAME BUTTONS
+// ==========================================
+document.querySelectorAll('.tf-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    chartData = [];
+    currentCandle = null;
+    log(`Timeframe: ${btn.textContent}`);
+  });
+});
+
+// ==========================================
+// NAV BUTTONS
+// ==========================================
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// ==========================================
+// INIT
+// ==========================================
+log('Scylla Platform initialized.');
+connectBinance();
+connectBackend();
+updateOrderBook(50000);
+
+</script>
 </body>
 </html>
