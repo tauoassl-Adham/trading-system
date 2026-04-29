@@ -13,6 +13,9 @@ from app.market.market_state import MarketState
 from app.strategy.strategy_engine import StrategyEngine
 from app.risk.risk_manager import RiskManager
 from app.execution.paper_executor import PaperExecutor
+from app.core.event_bus import EventBus
+from app.strategy.strategy_engine import StrategyEngine
+from app.market.simulate_market import MarketSimulator
 
 # إعداد السجلات - تصحيح __name__
 logging.basicConfig(
