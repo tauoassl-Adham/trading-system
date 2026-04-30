@@ -1,28 +1,18 @@
-"""
-╔══════════════════════════════════════════════════════════════╗
-║           SCYLLA TRADING PLATFORM — Backend v2.0            ║
-║         FastAPI + WebSocket + Binance Historical API        ║
-╚══════════════════════════════════════════════════════════════╝
-"""
+import sys
+import os
+# أضف مجلد trading-system للـ path عشان يشوف مجلد app/
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 import asyncio
 import logging
 import httpx
 import json
-from pathlib import Path
-from contextlib import asynccontextmanager
-
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
 
-# ── المحركات الداخلية ──────────────────────────────────────────
-import sys
-import os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+# استيراد المحركات
 from app.core.event_bus import event_bus
 from app.core.ws_manager import ws_manager
 from app.data.websocket_client import stream
@@ -32,327 +22,241 @@ from app.strategy.strategy_engine import StrategyEngine
 from app.risk.risk_manager import RiskManager
 from app.execution.paper_executor import PaperExecutor
 
-# ── الإعدادات ──────────────────────────────────────────────────
 logging.basicConfig(
     level=logging.INFO,
-    format="%(asctime)s | %(name)-20s | %(levelname)s | %(message)s",
-    datefmt="%H:%M:%S"
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger("scylla.backend")
+logger = logging.getLogger(__name__)
 
-BASE_DIR   = Path(__file__).resolve().parent.parent
-FRONTEND   = BASE_DIR / "frontend"
-BINANCE_API = "https://api.binance.com/api/v3"
+# ─────────────────────────────────────────────
+#  Binance REST — جلب الشموع التاريخية
+# ─────────────────────────────────────────────
+BINANCE_REST = "https://api.binance.com"
 
-# ── تهيئة المحركات ─────────────────────────────────────────────
+# تحويل timeframe من صيغة الداشبورد إلى صيغة Binance
+TF_MAP = {
+    "1m": "1m", "3m": "3m", "5m": "5m", "15m": "15m", "30m": "30m",
+    "1h": "1h", "2h": "2h", "4h": "4h", "6h": "6h", "8h": "8h",
+    "12h": "12h", "1d": "1d", "3d": "3d", "1w": "1w", "1M": "1M"
+}
+
+async def fetch_binance_candles(symbol: str, interval: str, limit: int = 120):
+    tf = TF_MAP.get(interval, "5m")
+    url = f"{BINANCE_REST}/api/v3/klines"
+    params = {"symbol": symbol.upper(), "interval": tf, "limit": limit}
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(url, params=params)
+        resp.raise_for_status()
+        raw = resp.json()
+
+    candles = []
+    for k in raw:
+        candles.append({
+            "t": int(k[0]) // 1000,
+            "o": float(k[1]),
+            "h": float(k[2]),
+            "l": float(k[3]),
+            "c": float(k[4]),
+            "v": float(k[5]),
+        })
+    
+    # ✅ احذف آخر شمعة — هي مفتوحة حالياً، الـ kline stream يتولاها
+    if candles:
+        candles = candles[:-1]
+    
+    return candles
+
+async def fetch_binance_ticker(symbol: str):
+    """يجلب بيانات الـ 24h ticker من Binance"""
+    url = f"{BINANCE_REST}/api/v3/ticker/24hr"
+    params = {"symbol": symbol.upper()}
+    async with httpx.AsyncClient(timeout=10) as client:
+        resp = await client.get(url, params=params)
+        resp.raise_for_status()
+        d = resp.json()
+    return {
+        "symbol": d["symbol"],
+        "price": float(d["lastPrice"]),
+        "open": float(d["openPrice"]),
+        "high": float(d["highPrice"]),
+        "low": float(d["lowPrice"]),
+        "volume": float(d["volume"]),
+        "change": float(d["priceChange"]),
+        "change_pct": float(d["priceChangePercent"]),
+    }
+
+# ─────────────────────────────────────────────
+#  Broadcast Helper
+# ─────────────────────────────────────────────
+def broadcast_event(data):
+    try:
+        loop = asyncio.get_event_loop()
+        asyncio.run_coroutine_threadsafe(ws_manager.broadcast(data), loop)
+        logger.info(f"Broadcasted: {data}")
+    except Exception as e:
+        logger.error(f"Error broadcasting event: {e}")
+
+# ─────────────────────────────────────────────
+#  Lifespan
+# ─────────────────────────────────────────────
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    asyncio.create_task(stream(event_bus))
+    logger.info("🚀 Scylla System: Live Feed Active")
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+# ─────────────────────────────────────────────
+#  تهيئة المحركات
+# ─────────────────────────────────────────────
 candle_engine   = CandleEngine(event_bus)
 market_state    = MarketState(event_bus)
 strategy_engine = StrategyEngine(event_bus)
-risk_manager    = RiskManager(event_bus, risk_per_trade=0.01, balance=10_000)
+risk_manager    = RiskManager(event_bus, risk_per_trade=0.01, balance=10000)
 paper_executor  = PaperExecutor(event_bus)
 
-# ══════════════════════════════════════════════════════════════
-#  دالة البث للداشبورد عبر WebSocket
-# ══════════════════════════════════════════════════════════════
-async def _broadcast(data: dict):
-    """إرسال أي حدث داخلي للداشبورد مباشرة"""
-    if ws_manager.active_connections:
-        await ws_manager.broadcast(data)
+event_bus.subscribe("trade_signal",     broadcast_event)
+event_bus.subscribe("execute_order",    broadcast_event)
+event_bus.subscribe("candle_closed_15m",broadcast_event)
 
-def sync_broadcast(data: dict):
-    """wrapper متزامن يُستخدم مع event_bus.subscribe"""
-    try:
-        loop = asyncio.get_event_loop()
-        if loop.is_running():
-            asyncio.ensure_future(_broadcast(data))
-    except Exception as e:
-        logger.error(f"Broadcast error: {e}")
-
-# ── ربط الأحداث الحيوية بالداشبورد ───────────────────────────
-event_bus.subscribe("trade_signal",      sync_broadcast)
-event_bus.subscribe("execute_order",     sync_broadcast)
-event_bus.subscribe("trade_confirmed",   sync_broadcast)
-event_bus.subscribe("candle_closed_5m",  sync_broadcast)
-event_bus.subscribe("candle_closed_15m", sync_broadcast)
-event_bus.subscribe("candle_closed_1h",  sync_broadcast)
-
-# ══════════════════════════════════════════════════════════════
-#  جلب الشموع التاريخية من Binance
-# ══════════════════════════════════════════════════════════════
-INTERVAL_MAP = {
-    "5m": "5m", "15m": "15m", "1h": "1h",
-    "4h": "4h", "1d": "1d",  "1w": "1w"
-}
-
-async def fetch_historical_candles(symbol: str, interval: str, limit: int = 100) -> list:
-    """
-    يجلب آخر `limit` شمعة من Binance REST API
-    ويعيدها بصيغة: [{t, o, h, l, c, v}, ...]
-    """
-    url = f"{BINANCE_API}/klines"
-    params = {
-        "symbol":   symbol.upper(),
-        "interval": INTERVAL_MAP.get(interval, "5m"),
-        "limit":    limit
-    }
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(url, params=params)
-            resp.raise_for_status()
-            raw = resp.json()
-            candles = [
-                {
-                    "t": int(k[0]) // 1000,   # open_time بالثواني
-                    "o": float(k[1]),
-                    "h": float(k[2]),
-                    "l": float(k[3]),
-                    "c": float(k[4]),
-                    "v": float(k[5])
-                }
-                for k in raw
-            ]
-            logger.info(f"Fetched {len(candles)} candles | {symbol} {interval}")
-            return candles
-    except Exception as e:
-        logger.error(f"Historical fetch error: {e}")
-        return []
-
-# ══════════════════════════════════════════════════════════════
-#  Lifespan — يبدأ وينتهي مع السيرفر
-# ══════════════════════════════════════════════════════════════
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info("━" * 60)
-    logger.info("  SCYLLA PLATFORM — Starting Up")
-    logger.info("━" * 60)
-
-    # تشغيل WebSocket Stream في الخلفية
-    asyncio.create_task(stream(event_bus))
-    logger.info("✅ Binance WebSocket stream started")
-
-    yield  # السيرفر يعمل هنا
-
-    logger.info("🔴 Scylla Platform shutting down...")
-
-# ══════════════════════════════════════════════════════════════
-#  تعريف التطبيق
-# ══════════════════════════════════════════════════════════════
-app = FastAPI(
-    title="Scylla Trading Platform",
-    version="2.0.0",
-    lifespan=lifespan
-)
-
-# السماح بالطلبات من الداشبورد
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# تقديم ملفات الـ Frontend (CSS, JS)
-if FRONTEND.exists():
-    app.mount("/static", StaticFiles(directory=str(FRONTEND)), name="static")
-
-# ══════════════════════════════════════════════════════════════
-#  الروابط (Endpoints)
-# ══════════════════════════════════════════════════════════════
-
-@app.get("/")
-async def serve_dashboard():
-    """يفتح الداشبورد مباشرة في المتصفح"""
-    dashboard = FRONTEND / "dashboard.html"
-    if dashboard.exists():
-        return FileResponse(str(dashboard))
-    return {"error": "dashboard.html not found", "path": str(dashboard)}
-
+# ─────────────────────────────────────────────
+#  REST Endpoints
+# ─────────────────────────────────────────────
 
 @app.get("/api/status")
 async def get_status():
-    """حالة النظام"""
     return {
         "system": "Online",
-        "version": "2.0.0",
-        "mode": "Paper Trading",
-        "engines": {
-            "candle_engine":   "active",
-            "market_state":    "active",
-            "strategy_engine": "active",
-            "risk_manager":    "active",
-            "paper_executor":  "active"
-        },
-        "active_timeframes": list(candle_engine.timeframes.keys()),
-        "ws_clients": len(ws_manager.active_connections)
+        "mode": "Swing Trading - MTF",
+        "active_timeframes": ["1m","5m","15m","1h","4h","1d"]
     }
 
-
+# ✅ الـ endpoint المفقود — الداشبورد يطلبه بـ loadCandles()
 @app.get("/api/candles/{symbol}/{interval}")
-async def get_candles(symbol: str, interval: str, limit: int = 100):
+async def get_candles(symbol: str, interval: str, limit: int = 120):
     """
-    يجلب الشموع التاريخية من Binance
-    مثال: GET /api/candles/BTCUSDT/5m?limit=100
+    يرجع الشموع التاريخية من Binance بصيغة جاهزة للداشبورد
+    مثال: GET /api/candles/BTCUSDT/5m?limit=120
     """
-    candles = await fetch_historical_candles(symbol, interval, limit)
-    return {
-        "symbol":   symbol.upper(),
-        "interval": interval,
-        "count":    len(candles),
-        "candles":  candles
-    }
+    try:
+        candles = await fetch_binance_candles(symbol, interval, limit)
+        logger.info(f"✅ Candles fetched: {symbol} {interval} → {len(candles)} candles")
+        return {"symbol": symbol, "interval": interval, "candles": candles}
+    except Exception as e:
+        logger.error(f"❌ Candles fetch failed: {e}")
+        return JSONResponse(
+            status_code=502,
+            content={"error": "Failed to fetch candles", "detail": str(e)}
+        )
 
+# ✅ الـ endpoint المفقود — لجلب بيانات الـ 24h
+@app.get("/api/ticker/24h/{symbol}")
+async def get_ticker_24h(symbol: str):
+    """
+    يرجع بيانات الـ 24h لحساب التغيير اليومي في الداشبورد
+    """
+    try:
+        data = await fetch_binance_ticker(symbol)
+        return data
+    except Exception as e:
+        logger.error(f"❌ Ticker fetch failed: {e}")
+        return JSONResponse(
+            status_code=502,
+            content={"error": "Failed to fetch ticker", "detail": str(e)}
+        )
 
 @app.get("/api/price/{symbol}")
 async def get_price(symbol: str):
-    """السعر اللحظي من Binance"""
     try:
+        url = f"{BINANCE_REST}/api/v3/ticker/price"
         async with httpx.AsyncClient(timeout=5) as client:
-            resp = await client.get(f"{BINANCE_API}/ticker/price", params={"symbol": symbol.upper()})
-            resp.raise_for_status()
-            data = resp.json()
-            return {"symbol": data["symbol"], "price": float(data["price"])}
-    except Exception as e:
-        return {"error": str(e)}
-
-
-@app.get("/api/ticker/24h/{symbol}")
-async def get_24h_ticker(symbol: str):
-    """بيانات 24 ساعة (سعر الفتح، أعلى، أدنى، التغيير)"""
-    try:
-        async with httpx.AsyncClient(timeout=5) as client:
-            resp = await client.get(f"{BINANCE_API}/ticker/24hr", params={"symbol": symbol.upper()})
-            resp.raise_for_status()
+            resp = await client.get(url, params={"symbol": symbol.upper()})
             d = resp.json()
-            return {
-                "symbol":        d["symbol"],
-                "open":          float(d["openPrice"]),
-                "high":          float(d["highPrice"]),
-                "low":           float(d["lowPrice"]),
-                "close":         float(d["lastPrice"]),
-                "change_pct":    float(d["priceChangePercent"]),
-                "volume":        float(d["volume"]),
-                "quote_volume":  float(d["quoteVolume"])
-            }
+        return {"symbol": d["symbol"], "price": float(d["price"])}
     except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(status_code=502, content={"error": str(e)})
 
-
-@app.post("/api/signal/test")
+@app.get("/api/test-signal")
 async def test_signal():
-    """إرسال إشارة اختبار للداشبورد"""
-    test = {
-        "type":   "trade_signal",
-        "action": "TEST_BUY",
-        "symbol": "BTCUSDT",
-        "entry":  candle_engine.candles.get("5m", {}).get("close", 0) if candle_engine.candles.get("5m") else 0,
-        "sl":     0,
-        "tp":     0,
-        "status": "TEST"
-    }
-    await _broadcast(test)
-    return {"status": "Signal sent", "data": test}
-
+    data = {"action": "TEST_BUY", "symbol": "BTCUSDT", "entry": 95000, "status": "MANUAL_TEST"}
+    await ws_manager.broadcast(data)
+    return {"status": "ok", "data": data}
 
 @app.get("/api/portfolio")
 async def get_portfolio():
-    """حالة المحفظة الوهمية"""
+    # placeholder — سيُربط بـ PaperExecutor لاحقاً
     return {
-        "balance":      risk_manager.balance,
-        "risk_per_trade": risk_manager.risk_per_trade,
+        "balance": 10000,
+        "equity": 10000,
         "open_positions": [],
-        "pnl":          0.0
+        "closed_trades": []
     }
 
-
-# ══════════════════════════════════════════════════════════════
-#  WebSocket — الاتصال المباشر مع الداشبورد
-# ══════════════════════════════════════════════════════════════
+# ─────────────────────────────────────────────
+#  WebSocket — مع معالجة get_candles
+# ─────────────────────────────────────────────
 @app.websocket("/ws/dashboard")
 async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
-    client = websocket.client
-    logger.info(f"✅ Dashboard connected: {client}")
-
-    # إرسال رسالة ترحيب فورية
-    await websocket.send_json({
-        "type":    "connected",
-        "message": "Scylla Platform v2.0 — Live",
-        "engines": "all_active"
-    })
-
+    logger.info("✅ Dashboard Client Connected")
     try:
         while True:
-            # استقبال طلبات من الداشبورد
             raw = await websocket.receive_text()
+
+            # ─── معالجة الرسائل القادمة من الداشبورد ───
             try:
                 msg = json.loads(raw)
-                await handle_dashboard_message(msg, websocket)
+                action = msg.get("action", "")
+
+                # ✅ الداشبورد يطلب الشموع عبر WebSocket (requestCandles)
+                if action == "get_candles":
+                    symbol   = msg.get("symbol", "BTCUSDT")
+                    interval = msg.get("interval", "5m")
+                    limit    = int(msg.get("limit", 120))
+                    try:
+                        candles = await fetch_binance_candles(symbol, interval, limit)
+                        await websocket.send_text(json.dumps({
+                            "type": "candles",
+                            "symbol": symbol,
+                            "interval": interval,
+                            "candles": candles
+                        }))
+                        logger.info(f"📊 WS Candles sent: {symbol} {interval} → {len(candles)}")
+                    except Exception as e:
+                        await websocket.send_text(json.dumps({
+                            "type": "error",
+                            "message": f"Failed to fetch candles: {e}"
+                        }))
+
+                # Paper Trade
+                elif action == "paper_trade":
+                    symbol = msg.get("symbol", "BTCUSDT")
+                    side   = msg.get("side", "BUY")
+                    qty    = float(msg.get("qty", 0))
+                    price  = float(msg.get("price", 0))
+                    event_bus.publish("paper_trade_request", {
+                        "symbol": symbol, "side": side, "qty": qty, "price": price
+                    })
+                    logger.info(f"📝 Paper Trade: {side} {qty} {symbol} @ {price}")
+
+                # Ping
+                elif action == "ping":
+                    await websocket.send_text(json.dumps({"type": "pong"}))
+
             except json.JSONDecodeError:
-                pass
+                pass  # رسائل نصية غير JSON — نتجاهلها
 
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)
-        logger.info(f"❌ Dashboard disconnected: {client}")
+        logger.info("❌ Dashboard Client Disconnected")
     except Exception as e:
         ws_manager.disconnect(websocket)
-        logger.error(f"WS error: {e}")
+        logger.error(f"WebSocket error: {e}")
 
-
-async def handle_dashboard_message(msg: dict, websocket: WebSocket):
-    """
-    معالجة الطلبات القادمة من الداشبورد عبر WebSocket
-    """
-    action = msg.get("action")
-
-    if action == "get_candles":
-        # الداشبورد يطلب شموع تاريخية
-        symbol   = msg.get("symbol", "BTCUSDT")
-        interval = msg.get("interval", "5m")
-        limit    = msg.get("limit", 100)
-        candles  = await fetch_historical_candles(symbol, interval, limit)
-        await websocket.send_json({
-            "type":     "candles",
-            "symbol":   symbol,
-            "interval": interval,
-            "candles":  candles
-        })
-
-    elif action == "paper_trade":
-        # الداشبورد يرسل أمر تداول وهمي
-        symbol = msg.get("symbol", "BTCUSDT")
-        side   = msg.get("side", "BUY")
-        qty    = float(msg.get("qty", 0))
-        price  = float(msg.get("price", 0))
-
-        if price > 0 and qty > 0:
-            event_bus.publish("trade_signal", {
-                "symbol": symbol,
-                "action": side,
-                "entry":  price,
-                "sl":     price * (0.99 if side == "BUY" else 1.01),
-                "tp":     price * (1.02 if side == "BUY" else 0.98),
-            })
-            await websocket.send_json({
-                "type":    "paper_trade_ack",
-                "status":  "queued",
-                "symbol":  symbol,
-                "side":    side,
-                "price":   price,
-                "qty":     qty
-            })
-
-    elif action == "ping":
-        await websocket.send_json({"type": "pong"})
-
-
-# ══════════════════════════════════════════════════════════════
-#  نقطة التشغيل
-# ══════════════════════════════════════════════════════════════
+# ─────────────────────────────────────────────
+#  Run
+# ─────────────────────────────────────────────
 if __name__ == "__main__":
-    uvicorn.run(
-        app,
-        host="127.0.0.1",
-        port=8000,
-        reload=False,
-        log_level="info"
-    )
+    uvicorn.run(app, host="127.0.0.1", port=8000)

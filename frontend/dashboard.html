@@ -399,7 +399,8 @@ async function loadCandles(sym,tf){
   try{
     const r=await fetch(`${API}/api/candles/${sym}/${tf}?limit=120`);
     const d=await r.json();
-    S.chartData=d.candles||[];
+    const raw = d.candles || [];
+    S.chartData = raw.length > 0 ? raw.slice(0, -1) : [];
     log(`Loaded ${S.chartData.length} candles | ${sym} ${tf}`);
   }catch(e){log('Backend offline — building from kline stream');}
   try{
@@ -461,29 +462,35 @@ function processTick(sym,price,tsMs){
 // ═══════════════════════════════════════════
 //  KLINE PROCESSING — الشمعة الحية الدقيقة
 // ═══════════════════════════════════════════
-function processKline(k){
-  // k.s = symbol, k.i = interval, k.t = open_time_ms
-  if(k.s !== S.sym || k.i !== S.tf) return;
+function processKline(k) {
+  if (k.s !== S.sym || k.i !== S.tf) return;
 
+  // الشمعة الحية — تُعرض فقط ولا تُضاف للتاريخ
   S.liveTick = {
-    t: Math.floor(k.t/1000),
+    t: Math.floor(k.t / 1000),
     o: parseFloat(k.o),
     h: parseFloat(k.h),
     l: parseFloat(k.l),
     c: parseFloat(k.c),
   };
 
-  // إذا الشمعة أغلقت — ادفعها للتاريخ
-  if(k.x){
-    S.chartData.push({...S.liveTick});
-    if(S.chartData.length>200)S.chartData.shift();
-    S.liveTick=null;
-    log(`Candle closed | ${k.s} ${k.i} | C:${parseFloat(k.c).toFixed(2)}`);
+  // عند إغلاق الشمعة — تحقق إنها مش موجودة قبل إضافتها
+  if (k.x) {
+    const closed = { ...S.liveTick };
+    const lastCandle = S.chartData[S.chartData.length - 1];
+    
+    // أضفها فقط إذا الـ timestamp مختلف عن آخر شمعة في التاريخ
+    if (!lastCandle || lastCandle.t !== closed.t) {
+      S.chartData.push(closed);
+      if (S.chartData.length > 200) S.chartData.shift();
+      log(`Candle closed | ${k.s} ${k.i} | C:${parseFloat(k.c).toFixed(2)}`);
+    }
+    
+    S.liveTick = null;
   }
 
-  // تحديث شارة الـ kline
-  const badge=document.getElementById('klineBadge');
-  if(badge){badge.style.borderColor='var(--green)';badge.style.color='var(--green)';}
+  const badge = document.getElementById('klineBadge');
+  if (badge) { badge.style.borderColor = 'var(--green)'; badge.style.color = 'var(--green)'; }
 }
 
 // ═══════════════════════════════════════════
