@@ -1,0 +1,1 @@
+{"ts": 0, "event": "audit_log_created", "details": {"note": "Create this file to store JSONL audit events. Each line is a JSON object."}}

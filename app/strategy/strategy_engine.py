@@ -131,23 +131,7 @@ class StrategyEngine:
         logger.info(f"TRADE EXECUTED → {action} @ {entry}")
 
     # -------------------------
-    # TICK FLOW (SIMULATION LAYER)
+    # TICK FLOW — معطّل، الإشارات تجي من SMCEngine فقط
     # -------------------------
     def process_tick(self, data):
-        price = data.get("price")
-        if price is None:
-            return
-
-        core = {
-            "bias": "BUY",
-            "entry_price": price,
-            "order_block": {
-                "low": price - 100,
-                "high": price + 100
-            },
-            "structure_score": 0.9,
-            "zone_score": 0.8,
-            "reaction_score": 0.9
-        }
-
-        self.process_signal({"core": core})
+        pass  # لا إشارات على التك — SMCEngine يتولى التحليل

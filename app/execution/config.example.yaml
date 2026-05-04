@@ -1,0 +1,51 @@
+# Execution Engine configuration example
+# Copy to config.yaml and edit values as needed.
+
+# Mode
+paper_mode: true            # true = use PaperAdapter, false = use BinanceAdapter (live)
+
+# Adapters
+adapter:
+  name: "paper"             # "paper" or "binance"
+  # Binance settings (used only if adapter.name == "binance")
+  binance:
+    api_key: "YOUR_BINANCE_API_KEY"
+    api_secret: "YOUR_BINANCE_API_SECRET"
+    recv_window: 5000
+    rate_limit_sleep: 0.2
+
+# Slippage model
+slippage:
+  base_slippage: 0.0005     # minimum slippage (fraction)
+  k: 0.1                    # scaling factor for large orders
+
+# Latency simulation (paper mode and router-level)
+latency:
+  mean_ms: 30
+  std_ms: 5
+
+# Fees (paper simulation)
+fees:
+  taker_rate: 0.00075       # 0.075%
+  maker_rate: 0.00025       # 0.025%
+
+# Persistence / storage
+persistence:
+  sqlite_path: "backend/app/execution/persistence/execution.db"
+  audit_log_path: "backend/app/execution/audit/audit_log.jsonl"
+
+# OMS / Router
+oms:
+  concurrency_limit: 10
+  max_retries: 3
+
+# Logging / audit
+logging:
+  level: "INFO"
+  jsonl_audit: true
+
+# Misc
+default_time_in_force: "GTC"
+supported_symbols:
+  - "BTCUSDT"
+  - "ETHUSDT"
