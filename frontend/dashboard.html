@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Scylla Trading Platform v4.0</title>
-
+ 
 <!-- TradingView Lightweight Charts -->
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
-
+ 
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Tajawal:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-
+ 
 <style>
 /* ══════════════════════════════════════════
    DESIGN TOKENS — أغمق وأوضح
@@ -65,7 +65,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg-deep);color:var(--text
                    linear-gradient(90deg,rgba(0,212,255,.02) 1px,transparent 1px);
   background-size:44px 44px;pointer-events:none;z-index:0;
 }
-
+ 
 /* ══ HEADER ══ */
 header{
   position:relative;z-index:100;
@@ -112,7 +112,7 @@ header{
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.35;}}
 .status-lbl{font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);color:var(--text-secondary);}
 .time-disp{font-family:'Share Tech Mono',monospace;font-size:var(--fs-md);color:var(--accent);}
-
+ 
 /* ══ NAV ══ */
 nav{
   position:relative;z-index:99;
@@ -132,11 +132,11 @@ nav::-webkit-scrollbar{height:0;}
 [data-lang="en"] .nav-btn{font-family:'Inter',sans-serif;}
 .nav-btn:hover{color:var(--text-secondary);border-color:var(--border);}
 .nav-btn.active{color:var(--accent);border-color:var(--border-glow);background:rgba(0,180,255,.07);}
-
+ 
 /* ══ PAGES ══ */
 .page{display:none;height:calc(100vh - 98px);}
 .page.active{display:flex;}
-
+ 
 /* ══ DASHBOARD GRID ══ */
 #page-dashboard{
   display:grid;
@@ -155,7 +155,7 @@ nav::-webkit-scrollbar{height:0;}
   color:var(--text-dim);background:rgba(0,180,255,.05);
   border:1px solid var(--border);padding:2px 7px;border-radius:3px;
 }
-
+ 
 /* ══ WATCHLIST ══ */
 .watchlist{grid-row:1/-1;display:flex;flex-direction:column;}
 .wl-body{flex:1;overflow-y:auto;padding:6px;}
@@ -176,7 +176,7 @@ nav::-webkit-scrollbar{height:0;}
 .asset-chg.up{color:var(--green);background:rgba(0,240,122,.12);}
 .asset-chg.down{color:var(--red);background:rgba(255,45,85,.12);}
 .spark-wrap{grid-column:1/-1;height:20px;margin-top:3px;}
-
+ 
 /* ══ CHART AREA ══ */
 .chart-area{grid-column:2;grid-row:1;display:flex;flex-direction:column;}
 .chart-toolbar{
@@ -192,14 +192,14 @@ nav::-webkit-scrollbar{height:0;}
 .ct-chg.down{color:var(--red);background:rgba(255,45,85,.1);border:1px solid rgba(255,45,85,.22);}
 .kbadge{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);padding:2px 7px;border-radius:3px;border:1px solid var(--green);color:var(--green);background:rgba(0,240,122,.06);white-space:nowrap;}
 .spacer{flex:1 1 auto;}
-
+ 
 /* MA Legend */
 .ma-legend{display:flex;gap:10px;align-items:center;flex-shrink:0;}
 .ma-item{display:flex;align-items:center;gap:4px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);cursor:pointer;padding:2px 6px;border-radius:3px;border:1px solid transparent;transition:all .15s;}
 .ma-item:hover{border-color:var(--border);}
 .ma-item.off{opacity:.35;}
 .ma-dot{width:10px;height:3px;border-radius:1px;}
-
+ 
 /* Tool buttons */
 .tool-group{display:flex;gap:3px;flex-shrink:0;}
 .tbtn{
@@ -219,7 +219,7 @@ nav::-webkit-scrollbar{height:0;}
 }
 .tf-btn:hover{color:var(--text-secondary);border-color:var(--border-glow);}
 .tf-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(0,180,255,.09);}
-
+ 
 /* Chart container */
 .chart-wrap{flex:1;position:relative;overflow:hidden;}
 /* ← هذا هو الـ div الذي ستُحقن فيه TradingView */
@@ -232,7 +232,7 @@ nav::-webkit-scrollbar{height:0;}
 .spinner{width:32px;height:32px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .loading-txt{font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);color:var(--text-dim);letter-spacing:2px;}
-
+ 
 /* ══ STATS ══ */
 .stats-bar{grid-column:2;grid-row:2;display:flex;}
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);width:100%;}
@@ -241,7 +241,7 @@ nav::-webkit-scrollbar{height:0;}
 .stat-val{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xl);color:var(--text-primary);line-height:1;}
 .stat-val.g{color:var(--green);} .stat-val.r{color:var(--red);} .stat-val.a{color:var(--accent);}
 .stat-sub{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--text-dim);}
-
+ 
 /* ══ RIGHT PANEL ══ */
 .right-panel{grid-row:1/-1;display:flex;flex-direction:column;gap:1px;background:var(--border);}
 .orderbook{background:var(--bg-panel);display:flex;flex-direction:column;flex:1.3;}
@@ -254,7 +254,7 @@ nav::-webkit-scrollbar{height:0;}
 .ob-price-ask{color:var(--red);} .ob-price-bid{color:var(--green);}
 .ob-size{color:var(--text-secondary);text-align:center;} .ob-total{color:var(--text-dim);}
 .ob-spread{text-align:center;padding:4px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);color:var(--yellow);border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin:3px 0;}
-
+ 
 /* Trade panel */
 .trade-panel{background:var(--bg-panel);display:flex;flex-direction:column;flex:.85;}
 .trade-body{padding:10px;flex:1;display:flex;flex-direction:column;gap:7px;}
@@ -275,7 +275,7 @@ nav::-webkit-scrollbar{height:0;}
 .exec-btn.buy{background:linear-gradient(135deg,#00c853,#00f07a);color:#000;}
 .exec-btn.sell{background:linear-gradient(135deg,#cc0020,#ff2d55);color:#fff;}
 .exec-btn:hover{transform:translateY(-1px);}
-
+ 
 /* Live Feed */
 .live-feed{background:var(--bg-panel);display:flex;flex-direction:column;flex:1;}
 .feed-body{flex:1;overflow-y:auto;padding:5px;}
@@ -289,7 +289,7 @@ nav::-webkit-scrollbar{height:0;}
 [data-lang="ar"] .feed-item.sell{border-right-color:var(--red);}
 .fp-buy{color:var(--green);} .fp-sell{color:var(--red);}
 .fsym{color:var(--text-secondary);} .ft{color:var(--text-dim);font-size:var(--fs-xs);}
-
+ 
 /* ══ STRATEGY PAGE ══ */
 #page-strategy{flex-direction:column;overflow-y:auto;background:var(--bg-deep);}
 .smc-wrap{padding:18px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;max-width:1400px;width:100%;}
@@ -348,18 +348,18 @@ nav::-webkit-scrollbar{height:0;}
 .entry-row{padding:10px 12px;background:var(--bg-card);border-radius:5px;border:1px solid var(--border);}
 .entry-type{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--accent);letter-spacing:1px;margin-bottom:4px;}
 .entry-desc{font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);color:var(--text-secondary);line-height:1.6;}
-
+ 
 /* Placeholders */
 .page-placeholder{align-items:center;justify-content:center;flex-direction:column;gap:10px;}
 .placeholder-text{font-family:'Share Tech Mono',monospace;font-size:var(--fs-md);color:var(--text-dim);letter-spacing:3px;}
-
+ 
 /* Toast & Log */
 .toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-14px);background:var(--bg-card2);border:1px solid var(--border-glow);border-radius:6px;padding:7px 18px;font-family:'Share Tech Mono',monospace;font-size:var(--fs-sm);color:var(--accent);z-index:500;opacity:0;transition:all .25s;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .log-bar{position:fixed;bottom:0;left:0;right:0;height:26px;background:var(--glass);border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 14px;z-index:100;backdrop-filter:blur(10px);}
 .log-lbl{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--accent);letter-spacing:2px;white-space:nowrap;}
 .log-txt{font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-
+ 
 /* Responsive */
 @media(max-width:900px){
   .header-tickers{display:none;}
@@ -378,7 +378,7 @@ nav::-webkit-scrollbar{height:0;}
 </style>
 </head>
 <body>
-
+ 
 <!-- ══ HEADER ══ -->
 <header>
   <div class="logo">
@@ -410,7 +410,7 @@ nav::-webkit-scrollbar{height:0;}
     <div class="time-disp" id="timeTxt">--:--:--</div>
   </div>
 </header>
-
+ 
 <!-- ══ NAV ══ -->
 <nav>
   <button class="nav-btn active" data-page="dashboard"><span class="t" data-ar="لوحة التحكم" data-en="Dashboard">لوحة التحكم</span></button>
@@ -420,10 +420,10 @@ nav::-webkit-scrollbar{height:0;}
   <button class="nav-btn" data-page="news"><span class="t" data-ar="الأخبار" data-en="News">الأخبار</span></button>
   <button class="nav-btn" data-page="analytics"><span class="t" data-ar="التحليلات" data-en="Analytics">التحليلات</span></button>
 </nav>
-
+ 
 <!-- ══════════ DASHBOARD ══════════ -->
 <div class="page active" id="page-dashboard">
-
+ 
   <!-- Watchlist -->
   <div class="panel watchlist">
     <div class="ph"><span class="ph-title">WATCHLIST</span><span class="ph-badge">3 ASSETS</span></div>
@@ -445,7 +445,7 @@ nav::-webkit-scrollbar{height:0;}
       </div>
     </div>
   </div>
-
+ 
   <!-- Chart -->
   <div class="panel chart-area">
     <div class="chart-toolbar">
@@ -454,7 +454,7 @@ nav::-webkit-scrollbar{height:0;}
       <span class="ct-chg up" id="ctChg">--</span>
       <span class="kbadge" id="kBadge">KLINE ✓</span>
       <div class="spacer"></div>
-
+ 
       <!-- MA Legend — قابلة للتفعيل/الإيقاف -->
       <div class="ma-legend">
         <div class="ma-item" data-ma="50" title="MA 50">
@@ -470,14 +470,14 @@ nav::-webkit-scrollbar{height:0;}
           <span style="color:#e74c3c;font-family:'Share Tech Mono',monospace;font-size:var(--fs-xs);">MA200</span>
         </div>
       </div>
-
+ 
       <!-- Zoom -->
       <div class="tool-group">
         <button class="tbtn" id="zIn" title="Zoom In">+</button>
         <button class="tbtn" id="zOut" title="Zoom Out">−</button>
         <button class="tbtn" id="zRst" title="Reset View">⊙</button>
       </div>
-
+ 
       <!-- TF -->
       <div class="tf-group">
         <button class="tf-btn" data-tf="1m">1m</button>
@@ -488,7 +488,7 @@ nav::-webkit-scrollbar{height:0;}
         <button class="tf-btn" data-tf="1d">1d</button>
       </div>
     </div>
-
+ 
     <!-- ← حاوية TradingView Lightweight Charts -->
     <div class="chart-wrap">
       <div id="tvChart"></div>
@@ -498,7 +498,7 @@ nav::-webkit-scrollbar{height:0;}
       </div>
     </div>
   </div>
-
+ 
   <!-- Stats -->
   <div class="panel stats-bar">
     <div class="stats-grid">
@@ -524,7 +524,7 @@ nav::-webkit-scrollbar{height:0;}
       </div>
     </div>
   </div>
-
+ 
   <!-- Right panel -->
   <div class="right-panel">
     <div class="panel orderbook">
@@ -568,7 +568,7 @@ nav::-webkit-scrollbar{height:0;}
     </div>
   </div>
 </div>
-
+ 
 <!-- ══════════ STRATEGY ══════════ -->
 <div class="page" id="page-strategy">
   <div class="smc-wrap">
@@ -632,16 +632,16 @@ nav::-webkit-scrollbar{height:0;}
     </div>
   </div>
 </div>
-
+ 
 <!-- Placeholders -->
 <div class="page page-placeholder" id="page-portfolio"><div class="placeholder-text">PORTFOLIO — COMING SOON</div></div>
 <div class="page page-placeholder" id="page-trades"><div class="placeholder-text">TRADES — COMING SOON</div></div>
 <div class="page page-placeholder" id="page-news"><div class="placeholder-text">NEWS — COMING SOON</div></div>
 <div class="page page-placeholder" id="page-analytics"><div class="placeholder-text">ANALYTICS — COMING SOON</div></div>
-
+ 
 <div class="log-bar"><div class="log-lbl">SYS</div><div class="log-txt" id="logTxt">Initializing Scylla v4.0...</div></div>
 <div class="toast" id="toast"></div>
-
+ 
 <script>
 'use strict';
 // ════════════════════════════════════════════════════
@@ -651,7 +651,7 @@ nav::-webkit-scrollbar{height:0;}
 const API    = 'http://127.0.0.1:8000';
 const WS_URL = 'ws://127.0.0.1:8000/ws/dashboard';
 const $=id=>document.getElementById(id);
-
+ 
 // ── State ─────────────────────────────────────────
 const S={
   sym:'BTCUSDT', tf:'5m', mode:'buy',
@@ -666,16 +666,16 @@ const S={
   smcSym:'BTCUSDT',
   maVisible:{50:true,100:true,200:true},
 };
-
+ 
 // ══════════════════════════════════════════════════
 //  TRADINGVIEW CHART ENGINE
 // ══════════════════════════════════════════════════
 let tvChart=null, candleSeries=null, volSeries=null;
 let maSeries={50:null,100:null,200:null};
-
+ 
 const MA_COLORS={50:'#f5a623',100:'#9b59b6',200:'#e74c3c'};
 const MA_PERIODS=[50,100,200];
-
+ 
 // ألوان TradingView من متغيرات CSS
 function getTVColors(){
   const dark=S.theme==='dark';
@@ -694,13 +694,13 @@ function getTVColors(){
     price_line: dark?'rgba(0,212,255,.8)':'rgba(0,119,204,.8)',
   };
 }
-
+ 
 function initChart(){
   const container=$('tvChart');
   if(!container)return;
-
+ 
   const C=getTVColors();
-
+ 
   // ── إنشاء الشارت الرئيسي ──────────────────────
   tvChart=LightweightCharts.createChart(container,{
     // autosize: true يجعله يملأ الحاوية تلقائياً
@@ -735,7 +735,7 @@ function initChart(){
     handleScroll:{mouseWheel:true,pressedMouseMove:true,horzTouchDrag:true},
     handleScale:{mouseWheel:true,pinch:true,axisPressedMouseMove:true},
   });
-
+ 
   // ── Candlestick Series ─────────────────────────
   candleSeries=tvChart.addCandlestickSeries({
     upColor:C.up,
@@ -749,7 +749,7 @@ function initChart(){
     priceLineStyle:2,
     lastValueVisible:true,
   });
-
+ 
   // ── Volume Series (histogram) ──────────────────
   // ← ربط Volume: يُحدَّث في setChartData() و updateLiveCandle()
   volSeries=tvChart.addHistogramSeries({
@@ -760,7 +760,7 @@ function initChart(){
   tvChart.priceScale('volume').applyOptions({
     scaleMargins:{top:0.82,bottom:0},
   });
-
+ 
   // ── MA Series ─────────────────────────────────
   // ← ربط MA: يُحسَّب ويُحدَّث في calcAndSetMA()
   MA_PERIODS.forEach(p=>{
@@ -773,10 +773,10 @@ function initChart(){
       title:`MA${p}`,
     });
   });
-
+ 
   log('TradingView chart initialized');
 }
-
+ 
 // ── حساب وضبط Moving Averages ──────────────────
 function calcAndSetMA(candles){
   MA_PERIODS.forEach(period=>{
@@ -794,11 +794,11 @@ function calcAndSetMA(candles){
     maSeries[period].setData(data);
   });
 }
-
+ 
 // ── تحميل البيانات التاريخية في الشارت ──────────
 function setChartData(rawCandles){
   if(!candleSeries||!volSeries)return;
-
+ 
   // تحويل الصيغة: {t,o,h,l,c,v} → TradingView format
   const candles=rawCandles.map(c=>({
     time:c.t,
@@ -814,19 +814,19 @@ function setChartData(rawCandles){
       ?getTVColors().vol_up
       :getTVColors().vol_down,
   }));
-
+ 
   candleSeries.setData(candles);
   volSeries.setData(volumes);
   calcAndSetMA(candles);
-
+ 
   // إخفاء loading
   $('chartLoading').style.display='none';
-
+ 
   // اذهب لآخر شمعة
   tvChart.timeScale().scrollToRealTime();
   log(`Chart: ${candles.length} candles loaded`);
 }
-
+ 
 // ── تحديث الشمعة الحية ──────────────────────────
 // ← هذا هو نقطة ربط WebSocket للبيانات الحية
 function updateLiveCandle(k){
@@ -846,12 +846,12 @@ function updateLiveCandle(k){
   };
   candleSeries.update(candle);
   volSeries.update(vol);
-
+ 
   // تحديث MA آخر نقطة
   // ملاحظة: MA الكاملة تُحسَّب عند تغيير الرمز/الفريم
   // هنا نحدّث فقط آخر نقطة تقريبياً
 }
-
+ 
 // ── تحديث ألوان الشارت عند تغيير الثيم ──────────
 function updateChartTheme(){
   if(!tvChart)return;
@@ -874,14 +874,14 @@ function updateChartTheme(){
     });
   }
 }
-
+ 
 // ════════════════════════════════════════════════
 //  CANDLES LOADER
 // ════════════════════════════════════════════════
 async function loadCandles(sym,tf){
   $('chartLoading').style.display='flex';
   let candles=[];
-
+ 
   try{
     // أولاً: حاول الباكند
     const r=await fetch(`${API}/api/candles/${sym}/${tf}?limit=500`);
@@ -890,7 +890,7 @@ async function loadCandles(sym,tf){
       candles=d.candles||[];
     }
   }catch(e){}
-
+ 
   // ثانياً: fallback مباشرة من Binance
   if(candles.length===0){
     try{
@@ -900,12 +900,12 @@ async function loadCandles(sym,tf){
       log(`Binance direct: ${candles.length}`);
     }catch(e){log('Candles failed: '+e.message);}
   }
-
+ 
   // احذف الشمعة المفتوحة الأخيرة — الـ kline يتولاها
   if(candles.length>0)candles=candles.slice(0,-1);
-
+ 
   setChartData(candles);
-
+ 
   // 24h ticker
   try{
     let pct=0,openP=0;
@@ -934,7 +934,7 @@ async function loadCandles(sym,tf){
     }
   }catch(e){}
 }
-
+ 
 // ════════════════════════════════════════════════
 //  THEME & LANG
 // ════════════════════════════════════════════════
@@ -955,13 +955,13 @@ function setLang(l){
 }
 $('themeBtn').onclick=()=>setTheme(S.theme==='dark'?'light':'dark');
 $('langBtn').onclick=()=>setLang(S.lang==='ar'?'en':'ar');
-
+ 
 // ════════════════════════════════════════════════
 //  CLOCK & TPS
 // ════════════════════════════════════════════════
 setInterval(()=>$('timeTxt').textContent=new Date().toLocaleTimeString('en-US',{hour12:false}),1000);
 setInterval(()=>{$('stTPS').textContent=S.tpsCount;S.tpsCount=0;},1000);
-
+ 
 // LOG & TOAST
 const LQ=[];
 function log(m){
@@ -974,7 +974,7 @@ function toast(msg,color='var(--accent)'){
   e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);
 }
 function fmt(p){if(!p)return'--';return p>=1000?p.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}):p.toFixed(4);}
-
+ 
 // ════════════════════════════════════════════════
 //  NAV
 // ════════════════════════════════════════════════
@@ -988,7 +988,7 @@ function showPage(name){
   if(name==='dashboard'&&tvChart)tvChart.timeScale().scrollToRealTime();
 }
 document.querySelectorAll('.nav-btn[data-page]').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
-
+ 
 // ════════════════════════════════════════════════
 //  ZOOM BUTTONS — TradingView built-in
 // ════════════════════════════════════════════════
@@ -1004,7 +1004,7 @@ $('zRst').onclick=()=>{if(tvChart){
   tvChart.timeScale().applyOptions({barSpacing:8});
   tvChart.timeScale().scrollToRealTime();
 }};
-
+ 
 // ════════════════════════════════════════════════
 //  MA TOGGLE
 // ════════════════════════════════════════════════
@@ -1019,7 +1019,7 @@ document.querySelectorAll('.ma-item[data-ma]').forEach(item=>{
     refetchAndUpdateMA();
   };
 });
-
+ 
 async function refetchAndUpdateMA(){
   try{
     const r=await fetch(`${API}/api/candles/${S.sym}/${S.tf}?limit=500`);
@@ -1031,7 +1031,7 @@ async function refetchAndUpdateMA(){
     }
   }catch(e){}
 }
-
+ 
 // ════════════════════════════════════════════════
 //  TF BUTTONS
 // ════════════════════════════════════════════════
@@ -1048,7 +1048,7 @@ document.querySelectorAll('.tf-btn').forEach(b=>{
     }
   };
 });
-
+ 
 // ════════════════════════════════════════════════
 //  KLINE — تحديث الشمعة الحية
 // ════════════════════════════════════════════════
@@ -1060,7 +1060,7 @@ function onKline(k){
   if(b){b.style.borderColor='var(--green)';b.style.color='var(--green)';}
   if(k.x)log(`Closed: ${k.s} ${k.i} C:${(+k.c).toFixed(2)}`);
 }
-
+ 
 // ════════════════════════════════════════════════
 //  TICK
 // ════════════════════════════════════════════════
@@ -1094,7 +1094,7 @@ function onTick(sym,price,ts){
   }
   addFeed(sym,price,price>=prev);
 }
-
+ 
 // ════════════════════════════════════════════════
 //  SPARKLINE
 // ════════════════════════════════════════════════
@@ -1120,7 +1120,7 @@ function drawSpark(sym){
   g.addColorStop(1,'transparent');
   ctx.fillStyle=g;ctx.fill();
 }
-
+ 
 // ════════════════════════════════════════════════
 //  ORDER BOOK
 // ════════════════════════════════════════════════
@@ -1142,7 +1142,7 @@ function drawOB(price){
   $('obSpread').textContent='SPREAD: '+(asks[0].p-bids[0].p).toFixed(2);
   $('bidRows').innerHTML=bids.map(b=>row(b,'ob-bid','ob-price-bid')).join('');
 }
-
+ 
 // ════════════════════════════════════════════════
 //  FEED
 // ════════════════════════════════════════════════
@@ -1158,7 +1158,7 @@ function addFeed(sym,price,isBuy){
   S.feedCount++;
   $('feedCnt').textContent=S.feedCount+' TICKS';
 }
-
+ 
 // ════════════════════════════════════════════════
 //  SMC STRATEGY
 // ════════════════════════════════════════════════
@@ -1170,7 +1170,7 @@ async function fetchSMC(sym){
     renderSMC(d);
   }catch(e){$('smcBias').textContent='OFFLINE';}
 }
-
+ 
 function renderSMC(d){
   if(!d||d.status==='insufficient_data'){$('smcBias').textContent='NO DATA';return;}
   const bias=d.bias||'NO_TRADE';
@@ -1222,7 +1222,7 @@ document.querySelectorAll('.smc-sym-btn').forEach(b=>{
 });
 $('smcAnalyzeBtn').onclick=()=>fetchSMC(S.smcSym);
 setInterval(()=>{if($('page-strategy').classList.contains('active'))fetchSMC(S.smcSym);},5*60*1000);
-
+ 
 // ════════════════════════════════════════════════
 //  BINANCE WEBSOCKET
 // ════════════════════════════════════════════════
@@ -1244,7 +1244,7 @@ function connectBinance(){
   binWS.onclose=()=>{S.bOk=false;updateStatus();setTimeout(connectBinance,3000);};
   binWS.onerror=()=>{};
 }
-
+ 
 // ════════════════════════════════════════════════
 //  BACKEND WEBSOCKET
 // ════════════════════════════════════════════════
@@ -1269,7 +1269,7 @@ function updateStatus(){
   $('statusDot').className='status-dot '+(ok?'on':'');
   $('statusTxt').textContent=ok?'LIVE':'CONNECTING';
 }
-
+ 
 // ════════════════════════════════════════════════
 //  UI EVENTS
 // ════════════════════════════════════════════════
@@ -1286,7 +1286,7 @@ document.querySelectorAll('.asset-card[data-sym]').forEach(card=>{
     loadCandles(S.sym,S.tf);
   };
 });
-
+ 
 $('buyTab').onclick=()=>{
   S.mode='buy';
   $('buyTab').classList.add('active');$('sellTab').classList.remove('active');
@@ -1310,16 +1310,16 @@ $('execBtn').onclick=()=>{
     beWS.send(JSON.stringify({action:'paper_trade',symbol:S.sym,side,qty,price}));
   toast(`Paper ${side}: ${qty} USDT @ ${price.toFixed(2)}`,side==='BUY'?'var(--green)':'var(--red)');
 };
-
+ 
 // ════════════════════════════════════════════════
 //  INIT
 // ════════════════════════════════════════════════
 setTheme(S.theme);
 setLang(S.lang);
-
+ 
 // أهم خطوة: تهيئة الشارت بعد ما الـ DOM جاهز
 initChart();
-
+ 
 log('Scylla v4.0 — TradingView Charts ready');
 connectBinance();
 connectBackend();
