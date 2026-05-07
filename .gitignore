@@ -1,10 +1,9 @@
-_pycache_/
+venv/
+.env
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
-<<<<<<< HEAD
-.env
 *.log
-=======
-.env
->>>>>>> 9703b2f8148639c32a31bc0057c94d9b925d1362
+.vscode/
+.idea/
