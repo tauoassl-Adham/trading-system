@@ -4,15 +4,79 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Scylla Trading Platform v4.0</title>
-
-<!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Tajawal:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-
-<!-- TradingView Lightweight Charts v4 -->
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
-
-<!-- Styles -->
 <link rel="stylesheet" href="css/styles.css">
+<style>
+/* ── News Ticker ── */
+.news-ticker-wrap{
+  flex:1;display:flex;align-items:center;gap:8px;
+  margin:0 12px;overflow:hidden;
+  border-left:1px solid var(--border);
+  border-right:1px solid var(--border);
+  padding:0 12px;min-width:0;
+}
+.news-ticker-lbl{
+  font-family:'Share Tech Mono',monospace;font-size:18px;
+  color:var(--accent);letter-spacing:2px;white-space:nowrap;flex-shrink:0;
+}
+#newsTicker{
+  font-family:'Share Tech Mono',monospace;font-size:16px;
+  color:var(--text-secondary);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+@keyframes tickerFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── Alerts Button ── */
+.alerts-btn{
+  position:relative;width:34px;height:34px;border-radius:7px;
+  border:1px solid var(--border);background:var(--bg-card);
+  color:var(--text-secondary);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;transition:all .2s;
+}
+.alerts-btn:hover{border-color:var(--yellow);color:var(--yellow);}
+#alertsBadge{
+  position:absolute;top:-5px;right:-5px;
+  background:var(--red);color:#fff;
+  font-family:'Share Tech Mono',monospace;font-size:9px;
+  min-width:16px;height:16px;border-radius:8px;
+  display:none;align-items:center;justify-content:center;
+  padding:0 3px;
+}
+
+/* ── Alerts Panel ── */
+.alerts-panel{
+  position:fixed;top:58px;right:0;width:340px;
+  height:calc(100vh - 58px);background:var(--bg-panel);
+  border-left:1px solid var(--border);z-index:200;
+  overflow-y:auto;transform:translateX(100%);
+  transition:transform .3s ease;
+}
+.alerts-panel.open{transform:translateX(0);}
+.alerts-panel-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;border-bottom:1px solid var(--border);
+  background:var(--bg-card);position:sticky;top:0;z-index:1;
+}
+.alerts-panel-title{
+  font-family:'Share Tech Mono',monospace;font-size:12px;
+  color:var(--accent);letter-spacing:2px;
+}
+.alerts-close-btn{
+  background:transparent;border:1px solid var(--border);
+  color:var(--text-dim);width:26px;height:26px;border-radius:4px;
+  cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;
+}
+.alerts-close-btn:hover{border-color:var(--red);color:var(--red);}
+
+/* ── Alerts Overlay ── */
+.alerts-overlay{
+  display:none;position:fixed;inset:0;z-index:199;
+  background:rgba(0,0,0,.4);
+}
+.alerts-overlay.open{display:block;}
+</style>
 </head>
 <body>
 
@@ -26,10 +90,13 @@
         <circle cx="20" cy="20" r="3" fill="var(--accent)"/>
       </svg>
     </div>
-    <div>
-      <div class="logo-text">SCYLLA</div>
-      <div class="logo-sub">v4.0</div>
-    </div>
+    <div><div class="logo-text">SCYLLA</div><div class="logo-sub">v4.0</div></div>
+  </div>
+
+  <!-- News Ticker — بين اللوجو والتيكرز -->
+  <div class="news-ticker-wrap">
+    <span class="news-ticker-lbl">NEWS</span>
+    <span id="newsTicker">يتصل بمصادر الأخبار...</span>
   </div>
 
   <div class="header-tickers">
@@ -56,12 +123,17 @@
     <button class="ctrl-btn" id="themeBtn">🌙</button>
     <button class="lang-btn" id="langBtn">EN</button>
     <div class="vsep"></div>
+    <!-- زر التنبيهات -->
+    <button class="alerts-btn" id="alertsBtn" title="التنبيهات">
+      🔔
+      <span id="alertsBadge"></span>
+    </button>
+    <div class="vsep"></div>
     <div class="status-wrap">
       <div class="status-dot" id="statusDot"></div>
       <span class="status-lbl" id="statusTxt">CONNECTING</span>
     </div>
     <div class="vsep"></div>
-    <!-- اضغط للتبديل بين 12/24h -->
     <div class="time-disp" id="timeTxt" title="اضغط للتبديل 12/24h">--:--:--</div>
   </div>
 </header>
@@ -88,15 +160,24 @@
   </button>
 </nav>
 
-<!-- ══════════════ DASHBOARD ══════════════ -->
+<!-- ══ ALERTS OVERLAY ══ -->
+<div class="alerts-overlay" id="alertsOverlay" onclick="closeAlertsPanel()"></div>
+
+<!-- ══ ALERTS PANEL ══ -->
+<div class="alerts-panel" id="alertsPanel">
+  <div class="alerts-panel-header">
+    <span class="alerts-panel-title">🔔 إعدادات التنبيهات</span>
+    <button class="alerts-close-btn" onclick="closeAlertsPanel()">✕</button>
+  </div>
+  <!-- يُبنى بواسطة buildAlertsPanel() -->
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
 <div class="page active" id="page-dashboard">
 
   <!-- Watchlist -->
   <div class="panel watchlist">
-    <div class="ph">
-      <span class="ph-title">WATCHLIST</span>
-      <span class="ph-badge">3 ASSETS</span>
-    </div>
+    <div class="ph"><span class="ph-title">WATCHLIST</span><span class="ph-badge">3 ASSETS</span></div>
     <div class="wl-body">
       <div class="asset-card active" data-sym="BTCUSDT">
         <div class="asset-name">BTC/USDT</div>
@@ -122,7 +203,7 @@
     </div>
   </div>
 
-  <!-- Chart Area -->
+  <!-- Chart -->
   <div class="panel chart-area">
     <div class="chart-toolbar">
       <span class="ct-sym" id="ctSym">BTC/USDT</span>
@@ -130,35 +211,17 @@
       <span class="ct-chg up" id="ctChg">--</span>
       <span class="kbadge" id="kBadge">KLINE ✓</span>
       <div class="spacer"></div>
-
-      <!-- MA Legend — اضغط لتفعيل/إيقاف -->
       <div class="ma-legend">
-        <div class="ma-item" data-ma="20" title="MA 20">
-          <div class="ma-dot" style="background:#00d4ff;"></div>
-          <span style="color:#00d4ff;font-family:'Share Tech Mono',monospace;font-size:11px;">MA20</span>
-        </div>
-        <div class="ma-item" data-ma="50" title="MA 50">
-          <div class="ma-dot" style="background:#f5a623;"></div>
-          <span style="color:#f5a623;font-family:'Share Tech Mono',monospace;font-size:11px;">MA50</span>
-        </div>
-        <div class="ma-item" data-ma="100" title="MA 100">
-          <div class="ma-dot" style="background:#9b59b6;"></div>
-          <span style="color:#9b59b6;font-family:'Share Tech Mono',monospace;font-size:11px;">MA100</span>
-        </div>
-        <div class="ma-item" data-ma="200" title="MA 200">
-          <div class="ma-dot" style="background:#e74c3c;"></div>
-          <span style="color:#e74c3c;font-family:'Share Tech Mono',monospace;font-size:11px;">MA200</span>
-        </div>
+        <div class="ma-item" data-ma="20"><div class="ma-dot" style="background:#00d4ff;"></div><span style="color:#00d4ff;font-family:'Share Tech Mono',monospace;font-size:11px;">MA20</span></div>
+        <div class="ma-item" data-ma="50"><div class="ma-dot" style="background:#f5a623;"></div><span style="color:#f5a623;font-family:'Share Tech Mono',monospace;font-size:11px;">MA50</span></div>
+        <div class="ma-item" data-ma="100"><div class="ma-dot" style="background:#9b59b6;"></div><span style="color:#9b59b6;font-family:'Share Tech Mono',monospace;font-size:11px;">MA100</span></div>
+        <div class="ma-item" data-ma="200"><div class="ma-dot" style="background:#e74c3c;"></div><span style="color:#e74c3c;font-family:'Share Tech Mono',monospace;font-size:11px;">MA200</span></div>
       </div>
-
-      <!-- Zoom Controls -->
       <div class="tool-group">
-        <button class="tbtn" id="zIn"  title="Zoom In">+</button>
-        <button class="tbtn" id="zOut" title="Zoom Out">−</button>
-        <button class="tbtn" id="zRst" title="Reset View">⊙</button>
+        <button class="tbtn" id="zIn">+</button>
+        <button class="tbtn" id="zOut">−</button>
+        <button class="tbtn" id="zRst">⊙</button>
       </div>
-
-      <!-- Timeframes -->
       <div class="tf-group">
         <button class="tf-btn" data-tf="1m">1m</button>
         <button class="tf-btn active" data-tf="5m">5m</button>
@@ -168,8 +231,6 @@
         <button class="tf-btn" data-tf="1d">1d</button>
       </div>
     </div>
-
-    <!-- TradingView Chart Container -->
     <div class="chart-wrap">
       <div id="tvChart"></div>
       <div class="chart-loading" id="chartLoading">
@@ -177,15 +238,13 @@
         <div class="loading-txt">LOADING CANDLES...</div>
       </div>
     </div>
-
-    <!-- RSI Panel -->
     <div class="rsi-wrap">
       <div id="rsiChart"></div>
       <div class="rsi-label" id="rsiLabel">RSI(14): --</div>
     </div>
   </div>
 
-  <!-- Stats Bar -->
+  <!-- Stats -->
   <div class="panel stats-bar">
     <div class="stats-grid">
       <div class="stat-cell">
@@ -213,26 +272,15 @@
 
   <!-- Right Panel -->
   <div class="right-panel">
-
-    <!-- Order Book -->
     <div class="panel orderbook">
-      <div class="ph">
-        <span class="ph-title">ORDER BOOK</span>
-        <span class="ph-badge" id="obSym">BTC/USDT</span>
-      </div>
+      <div class="ph"><span class="ph-title">ORDER BOOK</span><span class="ph-badge" id="obSym">BTC/USDT</span></div>
       <div class="ob-body">
-        <div class="ob-hdr">
-          <span>PRICE</span>
-          <span style="text-align:center">SIZE</span>
-          <span>TOTAL</span>
-        </div>
+        <div class="ob-hdr"><span>PRICE</span><span style="text-align:center">SIZE</span><span>TOTAL</span></div>
         <div class="ob-rows" id="askRows"></div>
         <div class="ob-spread" id="obSpread">SPREAD: --</div>
         <div class="ob-rows" id="bidRows"></div>
       </div>
     </div>
-
-    <!-- Paper Trade — ارتفاع ثابت يمنع التداخل مع Live Feed -->
     <div class="panel trade-panel">
       <div class="ph">
         <span class="ph-title t" data-ar="تداول وهمي" data-en="PAPER TRADE">تداول وهمي</span>
@@ -240,12 +288,8 @@
       </div>
       <div class="trade-body">
         <div class="trade-tabs">
-          <button class="trade-tab buy active" id="buyTab">
-            <span class="t" data-ar="شراء" data-en="BUY">شراء</span>
-          </button>
-          <button class="trade-tab sell" id="sellTab">
-            <span class="t" data-ar="بيع" data-en="SELL">بيع</span>
-          </button>
+          <button class="trade-tab buy active" id="buyTab"><span class="t" data-ar="شراء" data-en="BUY">شراء</span></button>
+          <button class="trade-tab sell" id="sellTab"><span class="t" data-ar="بيع" data-en="SELL">بيع</span></button>
         </div>
         <div class="input-grp">
           <label class="input-lbl t" data-ar="الكمية (USDT)" data-en="QUANTITY (USDT)">الكمية (USDT)</label>
@@ -260,8 +304,6 @@
         </button>
       </div>
     </div>
-
-    <!-- Live Feed — يأخذ المساحة المتبقية فقط -->
     <div class="panel live-feed">
       <div class="ph">
         <span class="ph-title t" data-ar="بث مباشر" data-en="LIVE FEED">بث مباشر</span>
@@ -269,19 +311,14 @@
       </div>
       <div class="feed-body" id="feedBody"></div>
     </div>
-
   </div>
 </div>
 
-<!-- ══════════════ STRATEGY ══════════════ -->
+<!-- ══ STRATEGY ══ -->
 <div class="page" id="page-strategy">
   <div class="smc-wrap">
-
     <div class="smc-title-row">
-      <div>
-        <div class="smc-title">SCYLLA SMC ENGINE</div>
-        <div class="smc-sub">SMART MONEY CONCEPTS — TOP-DOWN 1D → 4H → 1H</div>
-      </div>
+      <div><div class="smc-title">SCYLLA SMC ENGINE</div><div class="smc-sub">SMART MONEY CONCEPTS — TOP-DOWN 1D → 4H → 1H</div></div>
       <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
         <div class="smc-sym-row">
           <button class="smc-sym-btn active" data-ssym="BTCUSDT">BTC</button>
@@ -291,123 +328,87 @@
         <button class="smc-analyze-btn" id="smcAnalyzeBtn">⟳ ANALYZE</button>
       </div>
     </div>
-
     <div class="smc-card smc-verdict notrade" id="smcVerdict">
       <div class="smc-card-lbl">TRADING VERDICT</div>
       <div class="smc-bias notrade" id="smcBias">LOADING...</div>
       <div class="conf-lbl" id="smcConfLbl">Confidence: --</div>
-      <div class="conf-bar-wrap">
-        <div class="conf-bar notrade" id="smcConfBar" style="width:0%"></div>
-      </div>
+      <div class="conf-bar-wrap"><div class="conf-bar notrade" id="smcConfBar" style="width:0%"></div></div>
       <div class="smc-reason" id="smcReason">جاري تحليل السوق...</div>
     </div>
-
     <div class="smc-card">
       <div class="smc-card-lbl">MARKET STRUCTURE</div>
-      <div class="tf-row">
-        <span class="tf-name">1D — Daily</span>
-        <span class="tf-trend NEUTRAL" id="tr1d">NEUTRAL</span>
-      </div>
-      <div class="tf-row">
-        <span class="tf-name">4H — 4 Hour</span>
-        <span class="tf-trend NEUTRAL" id="tr4h">NEUTRAL</span>
-      </div>
-      <div class="tf-row">
-        <span class="tf-name">1H — 1 Hour</span>
-        <span class="tf-trend NEUTRAL" id="tr1h">NEUTRAL</span>
-      </div>
+      <div class="tf-row"><span class="tf-name">1D — Daily</span><span class="tf-trend NEUTRAL" id="tr1d">NEUTRAL</span></div>
+      <div class="tf-row"><span class="tf-name">4H — 4 Hour</span><span class="tf-trend NEUTRAL" id="tr4h">NEUTRAL</span></div>
+      <div class="tf-row"><span class="tf-name">1H — 1 Hour</span><span class="tf-trend NEUTRAL" id="tr1h">NEUTRAL</span></div>
       <div class="align-badge no" id="alignBadge">
         <div class="align-dot no" id="alignDot"></div>
         <span class="align-txt no" id="alignTxt">NOT ALIGNED</span>
       </div>
     </div>
-
     <div class="smc-card">
       <div class="smc-card-lbl">ORDER BLOCK & FVG</div>
       <div class="ob-zone">
         <div class="ob-zrow"><span class="ob-k">TYPE</span><span class="ob-v" id="obType">--</span></div>
         <div class="ob-zrow"><span class="ob-k">HIGH</span><span class="ob-v" id="obHigh">--</span></div>
-        <div class="ob-zrow"><span class="ob-k">LOW</span> <span class="ob-v" id="obLow">--</span></div>
-        <div class="ob-zrow"><span class="ob-k">POI</span> <span class="ob-v accent" id="obPOI">--</span></div>
+        <div class="ob-zrow"><span class="ob-k">LOW</span><span class="ob-v" id="obLow">--</span></div>
+        <div class="ob-zrow"><span class="ob-k">POI</span><span class="ob-v accent" id="obPOI">--</span></div>
         <div id="obFVGTag"><span class="smc-tag nofvg">NO FVG</span></div>
       </div>
     </div>
-
     <div class="smc-card full">
-      <div class="smc-card-lbl">RISK MANAGEMENT — SMART TP LADDER</div>
+      <div class="smc-card-lbl">RISK MANAGEMENT</div>
       <div class="risk-grid">
-        <div class="risk-cell">
-          <div class="risk-lbl">STOP LOSS</div>
-          <div class="risk-val sl" id="rSL">--</div>
-          <div class="risk-sub">Structural invalidation</div>
-        </div>
-        <div class="risk-cell">
-          <div class="risk-lbl">TP1 — First Target</div>
-          <div class="risk-val tp1" id="rTP1">--</div>
-          <div class="risk-sub">First resistance</div>
-        </div>
-        <div class="risk-cell">
-          <div class="risk-lbl">TP2 — Major POI</div>
-          <div class="risk-val tp2" id="rTP2">--</div>
-          <div class="risk-sub">Major liquidity</div>
-        </div>
-        <div class="risk-cell">
-          <div class="risk-lbl">TP3 — Macro</div>
-          <div class="risk-val tp3" id="rTP3">--</div>
-          <div class="risk-sub">External 1:3 RR</div>
-        </div>
+        <div class="risk-cell"><div class="risk-lbl">STOP LOSS</div><div class="risk-val sl" id="rSL">--</div><div class="risk-sub">Structural invalidation</div></div>
+        <div class="risk-cell"><div class="risk-lbl">TP1</div><div class="risk-val tp1" id="rTP1">--</div><div class="risk-sub">First resistance</div></div>
+        <div class="risk-cell"><div class="risk-lbl">TP2</div><div class="risk-val tp2" id="rTP2">--</div><div class="risk-sub">Major liquidity</div></div>
+        <div class="risk-cell"><div class="risk-lbl">TP3</div><div class="risk-val tp3" id="rTP3">--</div><div class="risk-sub">External 1:3 RR</div></div>
       </div>
     </div>
-
     <div class="smc-card full">
       <div class="smc-card-lbl">ENTRY SCENARIOS</div>
       <div class="entry-grid">
-        <div class="entry-row">
-          <div class="entry-type">PE — PRIMARY ENTRY</div>
-          <div class="entry-desc" id="ePE">دخول مباشر عند لمس الـ POI (OB + FVG)</div>
-        </div>
-        <div class="entry-row">
-          <div class="entry-type">AE — ALTERNATIVE ENTRY</div>
-          <div class="entry-desc" id="eAE">انتظار CHoCH تأكيد على 1H</div>
-        </div>
-        <div class="entry-row">
-          <div class="entry-type">CE — CONSERVATIVE ENTRY</div>
-          <div class="entry-desc" id="eCE">انتظار sweep أعمق أو إغلاق هيكلي HTF</div>
-        </div>
+        <div class="entry-row"><div class="entry-type">PE — PRIMARY ENTRY</div><div class="entry-desc" id="ePE">دخول مباشر عند لمس الـ POI (OB + FVG)</div></div>
+        <div class="entry-row"><div class="entry-type">AE — ALTERNATIVE ENTRY</div><div class="entry-desc" id="eAE">انتظار CHoCH تأكيد على 1H</div></div>
+        <div class="entry-row"><div class="entry-type">CE — CONSERVATIVE ENTRY</div><div class="entry-desc" id="eCE">انتظار sweep أعمق أو إغلاق هيكلي HTF</div></div>
       </div>
     </div>
-
   </div>
 </div>
 
-<!-- ══ PLACEHOLDER PAGES ══ -->
-<div class="page page-placeholder" id="page-portfolio">
-  <div class="placeholder-text">PORTFOLIO — COMING SOON</div>
-</div>
-<div class="page page-placeholder" id="page-trades">
-  <div class="placeholder-text">TRADES — COMING SOON</div>
-</div>
-<div class="page page-placeholder" id="page-news">
-  <div class="placeholder-text">NEWS — COMING SOON</div>
-</div>
-<div class="page page-placeholder" id="page-analytics">
-  <div class="placeholder-text">ANALYTICS — COMING SOON</div>
-</div>
+<!-- ══ PLACEHOLDERS ══ -->
+<div class="page page-placeholder" id="page-portfolio"><div class="placeholder-text">PORTFOLIO — COMING SOON</div></div>
+<div class="page page-placeholder" id="page-trades"><div class="placeholder-text">TRADES — COMING SOON</div></div>
+<div class="page page-placeholder" id="page-news"><div class="placeholder-text">NEWS — COMING SOON</div></div>
+<div class="page page-placeholder" id="page-analytics"><div class="placeholder-text">ANALYTICS — COMING SOON</div></div>
 
-<!-- ══ LOG BAR & TOAST ══ -->
-<div class="log-bar">
-  <div class="log-lbl">SYS</div>
-  <div class="log-txt" id="logTxt">Initializing Scylla v4.0...</div>
-</div>
+<div class="log-bar"><div class="log-lbl">SYS</div><div class="log-txt" id="logTxt">Initializing Scylla v4.0...</div></div>
 <div class="toast" id="toast"></div>
 
-<!-- ══ SCRIPTS — بالترتيب الصحيح ══ -->
+<!-- ══ SCRIPTS ══ -->
 <script src="js/config.js"></script>
 <script src="js/chart.js"></script>
 <script src="js/market.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/strategy.js"></script>
+<script src="js/alerts.js"></script>
 <script src="js/app.js"></script>
+
+<script>
+// ── Alerts Panel Controls ────────────────
+function openAlertsPanel(){
+  $('alertsPanel').classList.add('open');
+  $('alertsOverlay').classList.add('open');
+  clearAlertsBadge();
+}
+function closeAlertsPanel(){
+  $('alertsPanel').classList.remove('open');
+  $('alertsOverlay').classList.remove('open');
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn = $('alertsBtn');
+  if(btn) btn.onclick = openAlertsPanel;
+});
+</script>
 
 </body>
 </html>
