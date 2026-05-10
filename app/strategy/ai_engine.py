@@ -173,31 +173,6 @@ class ScyllaAIEngine:
         return {"raw": text}
 
     # ══════════════════════════════════════════
-    #  1. ترجمة الأخبار (تُستخدم من news_engine)
-    # ══════════════════════════════════════════
-    #async def translate_headlines(self, headlines: list[str]) -> list[str]:
-        """ترجمة جماعية — طلب واحد فقط"""
-        if not headlines:
-            return []
-        numbered = "\n".join([f"{i+1}. {h}" for i,h in enumerate(headlines)])
-        prompt = f"""ترجم هذه العناوين للعربية بأسلوب برقي مختصر.
-أعد JSON فقط:
-{{"translations": ["الترجمة 1", "الترجمة 2"]}}
-
-العناوين:
-{numbered}"""
-        try:
-            result = await self._ask(prompt, category="news")
-            parsed = self._parse_json(result)
-            translations = parsed.get('translations', [])
-            while len(translations) < len(headlines):
-                translations.append(headlines[len(translations)])
-            return translations[:len(headlines)]
-        except Exception as e:
-            logger.error(f"translate_headlines failed: {e}")
-            return headlines
-
-    # ══════════════════════════════════════════
     #  2. تحليل السوق
     # ══════════════════════════════════════════
     async def analyze_market(self, market_data: dict) -> dict:
