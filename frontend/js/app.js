@@ -145,6 +145,8 @@ function init(){
   setupMAToggle();
   setupTradePanel();
   setupStrategy();
+  initNews();
+  
 
   // تهيئة الشارت
   initChart();

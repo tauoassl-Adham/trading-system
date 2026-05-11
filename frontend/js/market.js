@@ -203,7 +203,7 @@ function connectBackend(){
         const d=JSON.parse(e.data);
         // أخبار من الباكند
         if(d.type==='news_update'){
-          processNewsItems(d.items||[]);
+          processNewsUpdate(d.items||[]);   // ← news.js
           return;
         }
         // باقي الرسائل
